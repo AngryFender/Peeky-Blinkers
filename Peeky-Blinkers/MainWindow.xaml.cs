@@ -20,9 +20,25 @@ namespace Peeky_Blinkers
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly Win _win = Win.GetInstance();
+        private List<WindowInfo> _winList = new List<WindowInfo>();
+        
         public MainWindow()
         {
             InitializeComponent();
+            _winList = _win.GetEnumWindow();
+            _win.FilterWindowTitles();
+            WinListView.ItemsSource = _winList;
+            WinListView.SelectionChanged += WinItemSelectionChangedHandler;
+        }
+
+        private void WinItemSelectionChangedHandler(object sender, SelectionChangedEventArgs e)
+        {
+            if (!(WinListView.SelectedValue is WindowInfo info))
+            {
+                return;
+            }
+            _win.SelectWindow(info.HWnd);
         }
     }
 }
