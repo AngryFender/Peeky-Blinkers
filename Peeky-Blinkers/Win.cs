@@ -41,6 +41,10 @@ namespace Peeky_Blinkers
         [DllImport("user32.dll", CharSet = CharSet.Ansi)]
         static extern int GetWindowTextA(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool IsWindowVisible(IntPtr hWnd);
+
 
         public static Win GetInstance()
         {
@@ -76,6 +80,24 @@ namespace Peeky_Blinkers
             EnumWindowsProc enumWinProc = new EnumWindowsProc(EnumWindowsCallBack);
             EnumWindows(enumWinProc, IntPtr.Zero);
             return _windowList;
+        }
+
+        public void FilterWindowVisible()
+        {
+
+            List<WindowInfo> removeList = new List<WindowInfo>();
+            foreach(var window in _windowList)
+            {
+                if(!IsWindowVisible(window.HWnd))
+                {
+                    removeList.Add(window);
+                }
+            }
+
+            foreach(var reject in removeList)
+            {
+                _windowList.Remove(reject);
+            }
         }
 
         public void FilterWindowTitles()
