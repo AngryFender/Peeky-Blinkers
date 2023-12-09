@@ -10,6 +10,13 @@
         <ListView Name="WinListView">
             <ListView.View>
                 <GridView>
+                    <GridViewColumn Header="Select" Width="50">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
                     <GridViewColumn Header="Id" Width="60">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>

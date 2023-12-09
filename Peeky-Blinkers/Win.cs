@@ -68,7 +68,7 @@ namespace Peeky_Blinkers
             WinRect rect;
             if (GetWindowRect(hWnd, out rect))
             {
-                WindowInfo info = new WindowInfo(hWnd, rect.left, rect.top, rect.right, rect.bottom, null);
+                WindowInfo info = new WindowInfo(hWnd, rect.left, rect.top, rect.right, rect.bottom, null, true);
                 _windowList.Add(info);
             }
             return true;
@@ -134,7 +134,7 @@ namespace Peeky_Blinkers
 
     internal class WindowInfo
     {
-        public WindowInfo(IntPtr hWnd, int left, int top, int right, int bottom, string title)
+        public WindowInfo(IntPtr hWnd, int left, int top, int right, int bottom, string title, bool isSelected)
         {
             HWnd = hWnd;
             Left = left;
@@ -142,6 +142,7 @@ namespace Peeky_Blinkers
             Right = right;
             Bottom = bottom;
             Title = title;
+            IsSelected = isSelected;
         }
 
         public IntPtr HWnd { get; }
@@ -150,5 +151,6 @@ namespace Peeky_Blinkers
         public int Right { get; }
         public int Bottom { get; }
         public string Title { get; set; }
+        public bool IsSelected { get; set; }
     }
 }
