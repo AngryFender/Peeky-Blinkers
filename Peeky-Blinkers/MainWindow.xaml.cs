@@ -37,7 +37,13 @@ namespace Peeky_Blinkers
             WinListView.ItemsSource = winList;
             WinListView.SelectionChanged += WinItemSelectionChangedHandler;
             BtnRefresh.Click += BtnRefresh_Click;
+            _win.WindowAddRemoveHandler += WindowAddRemoveHandle;
             BtnSwap.Click += BtnSwap_Click;
+        }
+
+        private void WindowAddRemoveHandle(object sender, WindowInfoArgs e)
+        {
+            WinListView.ItemsSource = e.GetList();
         }
 
         private void BtnRefresh_Click(object sender, RoutedEventArgs e)

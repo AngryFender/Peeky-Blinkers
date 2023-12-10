@@ -13,7 +13,20 @@ namespace Peeky_Blinkers
         private static List<WindowInfo> _windowList = new List<WindowInfo>();
         private static List<WindowInfo> _rawWindowList = new List<WindowInfo>();
 
+        private const uint EVENT_SYSTEM_FOREGROUND = 3;
+        private const uint WINEVENT_OUTOFCONTEXT = 0;
+        private IntPtr _winEventHook;
+        private WinEventProc _winEventProc;
+
+ 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        private delegate void WinEventProc(IntPtr hWinEventHook
+                                            , uint eventType
+                                            , IntPtr hwnd
+                                            , int idObject
+                                            , int idChild
+                                            , uint dwEventThread
+                                            , uint dwmsEventTime);
 
         [DllImport("user32.dll")]
         static extern bool EnumDesktopWindows(IntPtr hDesktop, EnumWindowsProc eumWinProc, IntPtr lParam);
@@ -49,6 +62,17 @@ namespace Peeky_Blinkers
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool IsWindowVisible(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        static extern IntPtr SetWinEventHook(uint eventMin
+                                            , uint eventMax
+                                            , IntPtr hmodWinEventProc
+                                            , WinEventProc fnWinEventProc
+                                            , uint idProcess
+                                            , uint idThread
+                                            , uint dwFlag);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr UnhookWinEvent(IntPtr hWinEventHook); 
 
         public static Win GetInstance()
         {
@@ -58,11 +82,36 @@ namespace Peeky_Blinkers
             }
             return _singleWin;
         }
-        
+
+        private Win()
+        {
+            _winEventProc = new WinEventProc(WinEventHookHandler);
+            _winEventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND
+                                            , EVENT_SYSTEM_FOREGROUND
+                                            , IntPtr.Zero
+                                            , _winEventProc
+                                            , 0
+                                            , 0
+                                            , WINEVENT_OUTOFCONTEXT);
+        }
+
         public List<WindowInfo> GetCurrentWindowList()
         {
             GetEnumWindow();
             return FilterWindowWithTitles();
+        }
+
+        private void WinEventHookHandler(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        {
+            List<WindowInfo> list = GetCurrentWindowList();
+            RaiseWindowInfoChanged(list);
+        }
+
+        public event EventHandler<WindowInfoArgs> WindowAddRemoveHandler;
+
+        public void RaiseWindowInfoChanged(List<WindowInfo> list)
+        {
+            WindowAddRemoveHandler?.Invoke(this, new WindowInfoArgs(list));
         }
 
         public void SelectWindow(IntPtr hWnd)
@@ -121,7 +170,7 @@ namespace Peeky_Blinkers
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            UnhookWinEvent(_winEventHook);
         }
 
         internal void Swap()
@@ -139,12 +188,10 @@ namespace Peeky_Blinkers
 
             int safe = hwndList.Count();
             int count = selectedWindowList.Count();
-            int nextIndex = 0;
-
-            for(int index = 0; index < count; ++index)
+            for (int index = 0; index < count; ++index)
             {
-                nextIndex = index + 1;
-                if(nextIndex < safe)
+                int nextIndex = index + 1;
+                if (nextIndex < safe)
                 {
                     selectedWindowList[index].HWnd = hwndList[nextIndex];
                 }
@@ -167,6 +214,21 @@ namespace Peeky_Blinkers
                     MessageBox.Show(movedWindow.Title);
                 }
             }
+        }
+    }
+
+    internal class WindowInfoArgs : EventArgs
+    {
+        private readonly List<WindowInfo> windowList;
+
+        public List<WindowInfo> GetList()
+        {
+            return windowList;
+        }
+
+        public WindowInfoArgs(List<WindowInfo> list)
+        {
+            this.windowList = list;
         }
     }
 
