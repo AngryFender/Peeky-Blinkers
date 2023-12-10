@@ -15,8 +15,20 @@ namespace Peeky_Blinkers
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
+        private const int WH_KEYBOARD_LL = 13;
+        private const int WM_KEYDOWN = 0x0100;
+        private static bool isLeftShiftPressedDown = false;
+        private static bool isRightShiftPressedDown = false;
+        private const int WM_SYSKEYDOWN = 0x0104;
+        private const int WM_KEYUP = 0x0101;
+        private const int WM_SYSKEYUP = 0x0105;
+        private const int VK_LSHIFT = 0xA0;
+        private const int VK_RSHIFT = 0xA1;
+
         private IntPtr _winEventHook;
+        private IntPtr _keyboardEventHook;
         private WinEventProc _winEventProc;
+        private KeyboardProc _keyboardProc;
 
  
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
@@ -27,16 +39,13 @@ namespace Peeky_Blinkers
                                             , int idChild
                                             , uint dwEventThread
                                             , uint dwmsEventTime);
+        private delegate IntPtr KeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll")]
         static extern bool EnumDesktopWindows(IntPtr hDesktop, EnumWindowsProc eumWinProc, IntPtr lParam);
 
         [DllImport("user32.dll")]
         static extern IntPtr SetActiveWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct WinRect
@@ -72,7 +81,30 @@ namespace Peeky_Blinkers
                                             , uint dwFlag);
 
         [DllImport("user32.dll")]
-        static extern IntPtr UnhookWinEvent(IntPtr hWinEventHook); 
+        static extern IntPtr UnhookWinEvent(IntPtr hWinEventHook);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern IntPtr SetWindowsHookEx(int idHook
+            , KeyboardProc lpfn
+            , IntPtr hmod
+            , uint dwThreadId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern IntPtr CallNextHookEx(IntPtr hhk
+            , int nCode
+            , IntPtr wParam
+            , IntPtr lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        static extern IntPtr GetModuleHandleA(string lpModuleName);
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr LoadLibrary(string lpFileName);
+
 
         public static Win GetInstance()
         {
@@ -93,12 +125,63 @@ namespace Peeky_Blinkers
                                             , 0
                                             , 0
                                             , WINEVENT_OUTOFCONTEXT);
+             _keyboardProc = new KeyboardProc(KeyboardEventHookHandler);
+            IntPtr hInstance = LoadLibrary("User32");
+            _keyboardEventHook = SetWindowsHookEx(WH_KEYBOARD_LL, _keyboardProc, hInstance,  0);
         }
 
         public List<WindowInfo> GetCurrentWindowList()
         {
             GetEnumWindow();
             return FilterWindowWithTitles();
+        }
+
+        private IntPtr KeyboardEventHookHandler(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (_windowList.Count() >0 && nCode >= 0)
+            {
+                int vkCode = Marshal.ReadInt32(lParam);
+                bool isKeyDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
+                bool isKeyUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
+
+                if (isKeyDown)
+                {
+                    if (vkCode == VK_LSHIFT)
+                    {
+                        isLeftShiftPressedDown = true;
+                    }
+                    else if (vkCode == VK_RSHIFT)
+                    {
+                        isRightShiftPressedDown = true;
+                    }
+
+                    if (isLeftShiftPressedDown && isRightShiftPressedDown)
+                    {
+                        RaiseSwap();
+                    }
+                }
+
+                if (isKeyUp)
+                { 
+                    if (vkCode == VK_LSHIFT)
+                    {
+                        isLeftShiftPressedDown = false;
+                    }
+                    else if (vkCode == VK_RSHIFT)
+                    {
+                        isRightShiftPressedDown = false;
+                    }
+                }
+
+            }
+            return CallNextHookEx(_keyboardEventHook, nCode, wParam, lParam);
+        }
+
+        public event EventHandler SwapHandler;
+
+        public void RaiseSwap()
+        {
+            SwapHandler?.Invoke(this, EventArgs.Empty);
         }
 
         private void WinEventHookHandler(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
@@ -112,14 +195,6 @@ namespace Peeky_Blinkers
         public void RaiseWindowInfoChanged(List<WindowInfo> list)
         {
             WindowAddRemoveHandler?.Invoke(this, new WindowInfoArgs(list));
-        }
-
-        public void SelectWindow(IntPtr hWnd)
-        {
-            if (_windowList.Any(window => window.HWnd == hWnd))
-            {
-                ShowWindow(hWnd,9);
-            }
         }
 
         private bool EnumWindowsCallBack(IntPtr hWnd, IntPtr lParam)
@@ -171,6 +246,7 @@ namespace Peeky_Blinkers
         public void Dispose()
         {
             UnhookWinEvent(_winEventHook);
+            UnhookWindowsHookEx(_keyboardEventHook);
         }
 
         internal void Swap()

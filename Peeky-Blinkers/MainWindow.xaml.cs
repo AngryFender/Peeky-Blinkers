@@ -7,6 +7,8 @@ using Application = System.Windows.Application;
 using MessageBox = System.Windows.MessageBox;
 using System;
 using System.ComponentModel;
+using ContextMenu = System.Windows.Forms.ContextMenu;
+using System.Windows.Input;
 
 namespace Peeky_Blinkers
 {
@@ -15,14 +17,15 @@ namespace Peeky_Blinkers
     /// </summary>
     public partial class MainWindow : Window
     {
-        private NotifyIcon notifyIcon;
+        private NotifyIcon _notifyIcon;
         private readonly Win _win = Win.GetInstance();
+        private bool _exitRequested = false;
         
         public MainWindow()
         {
             InitializeComponent();
 
-            this.notifyIcon = new NotifyIcon
+            this._notifyIcon = new NotifyIcon
             {
                 BalloonTipText = "Peeky-Blinkers is minimized to tray",
                 BalloonTipTitle = "Peeky-Blinkers",
@@ -30,39 +33,55 @@ namespace Peeky_Blinkers
                 Icon = Properties.Resources.swap,
                 Visible = true
             };
-            notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
+            _notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
             this.Closing += MainWindowClosing;
+            this.StateChanged += MainWindowStateChanged;
+
+            ContextMenu trayMenu = new ContextMenu();
+            trayMenu.MenuItems.Add("Show App", (s, e) => ShowMainWindow());
+            trayMenu.MenuItems.Add("Exit", (s, e) => CloseApplication());
+            _notifyIcon.ContextMenu = trayMenu;
 
             List<WindowInfo> winList = _win.GetCurrentWindowList();
             WinListView.ItemsSource = winList;
-            WinListView.SelectionChanged += WinItemSelectionChangedHandler;
-            BtnRefresh.Click += BtnRefresh_Click;
             _win.WindowAddRemoveHandler += WindowAddRemoveHandle;
-            BtnSwap.Click += BtnSwap_Click;
+            _win.SwapHandler += WindowSwapHandle;
         }
 
-        private void WindowAddRemoveHandle(object sender, WindowInfoArgs e)
+        private void MainWindowStateChanged(object sender, EventArgs e)
         {
-            WinListView.ItemsSource = e.GetList();
+            if(WindowState.Minimized == this.WindowState)
+            {
+                HideWindow();
+            }
         }
 
-        private void BtnRefresh_Click(object sender, RoutedEventArgs e)
+        private void CloseApplication()
         {
-            List<WindowInfo> winList = _win.GetCurrentWindowList();
-            WinListView.ItemsSource = winList;
+            _exitRequested = true;
+            Application.Current.Shutdown();
         }
 
-        private void BtnSwap_Click(object sender, RoutedEventArgs e)
+        private void WindowSwapHandle(object sender, EventArgs e)
         {
-            _win.Swap();
+             _win.Swap();
              List<WindowInfo> newList = _win.GetCurrentWindowList();
             WinListView.ItemsSource = newList;
        }
 
+        private void WindowAddRemoveHandle(object sender, WindowInfoArgs e)
+        {
+            WinListView.ItemsSource = e.GetList();
+            WinListView.Items.Refresh();
+        }
+
         private void MainWindowClosing(object sender, CancelEventArgs e)
         {
-            e.Cancel = true;
-            HideWindow();
+            if (!_exitRequested)
+            {
+                e.Cancel = true;
+                HideWindow();
+            }
         }
 
         private void ShowMainWindow()
@@ -74,17 +93,8 @@ namespace Peeky_Blinkers
         private void HideWindow()
         {
             this.Hide();
-            notifyIcon.Visible = true;
-            notifyIcon.ShowBalloonTip(1);
-        }
-
-        private void WinItemSelectionChangedHandler(object sender, SelectionChangedEventArgs e)
-        {
-            if (!(WinListView.SelectedValue is WindowInfo info))
-            {
-                return;
-            }
-            _win.SelectWindow(info.HWnd);
+            _notifyIcon.Visible = true;
+            _notifyIcon.ShowBalloonTip(1);
         }
     }
 }

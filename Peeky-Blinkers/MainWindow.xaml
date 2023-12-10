@@ -5,12 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Peeky_Blinkers"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <StackPanel>
-        <ListView Name="WinListView">
+        Title="Peeky Blinkers" Height="250" Width="400"
+        Topmost="True">
+    <Grid>
+        <ListView Name="WinListView"  ScrollViewer.HorizontalScrollBarVisibility="Hidden" >
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Select" Width="50">
+                    <GridViewColumn Header="Select" Width="40">
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <CheckBox IsChecked="{Binding IsSelected}"/>
@@ -21,6 +22,13 @@
                         <GridViewColumn.CellTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding HWnd}"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                     <GridViewColumn Header="Title" Width="300">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Title}"/>
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
@@ -52,17 +60,8 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-                     <GridViewColumn Header="Title" Width="300">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding Title}"/>
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
                 </GridView>
             </ListView.View>
         </ListView>
-        <Button x:Name="BtnRefresh" Height="20" Width="60" Content="Refresh"/>
-        <Button x:Name="BtnSwap" Height="20" Width="60" Content="Swap"/>
-    </StackPanel>
+    </Grid>
 </Window>
