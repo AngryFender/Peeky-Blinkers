@@ -17,7 +17,6 @@ namespace Peeky_Blinkers
     {
         private NotifyIcon notifyIcon;
         private readonly Win _win = Win.GetInstance();
-        private List<WindowInfo> _winList = new List<WindowInfo>();
         
         public MainWindow()
         {
@@ -34,12 +33,25 @@ namespace Peeky_Blinkers
             notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
             this.Closing += MainWindowClosing;
 
-            _winList = _win.GetEnumWindow();
-            _win.FilterWindowVisible();
-            _win.FilterWindowTitles();
-            WinListView.ItemsSource = _winList;
+            List<WindowInfo> winList = _win.GetCurrentWindowList();
+            WinListView.ItemsSource = winList;
             WinListView.SelectionChanged += WinItemSelectionChangedHandler;
+            BtnRefresh.Click += BtnRefresh_Click;
+            BtnSwap.Click += BtnSwap_Click;
         }
+
+        private void BtnRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            List<WindowInfo> winList = _win.GetCurrentWindowList();
+            WinListView.ItemsSource = winList;
+        }
+
+        private void BtnSwap_Click(object sender, RoutedEventArgs e)
+        {
+            _win.Swap();
+             List<WindowInfo> newList = _win.GetCurrentWindowList();
+            WinListView.ItemsSource = newList;
+       }
 
         private void MainWindowClosing(object sender, CancelEventArgs e)
         {
@@ -67,9 +79,6 @@ namespace Peeky_Blinkers
                 return;
             }
             _win.SelectWindow(info.HWnd);
-            _win.FilterWindowVisible();
-            _win.FilterWindowTitles();
-            WinListView.ItemsSource = _winList;
         }
     }
 }

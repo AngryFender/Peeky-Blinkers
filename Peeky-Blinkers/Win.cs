@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
-using System.Security.Policy;
+using System.Windows;
 
 namespace Peeky_Blinkers
 {
     internal class Win : IDisposable
     {
         private static Win _singleWin;
-        private static readonly List<WindowInfo> _windowList = new List<WindowInfo>();
+        private static List<WindowInfo> _windowList = new List<WindowInfo>();
+        private static List<WindowInfo> _rawWindowList = new List<WindowInfo>();
 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        static extern bool EnumWindows(EnumWindowsProc eumWinProc, IntPtr lParam);
+        static extern bool EnumDesktopWindows(IntPtr hDesktop, EnumWindowsProc eumWinProc, IntPtr lParam);
 
         [DllImport("user32.dll")]
         static extern IntPtr SetActiveWindow(IntPtr hWnd);
@@ -38,6 +38,10 @@ namespace Peeky_Blinkers
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool GetWindowRect(IntPtr hWnd,out WinRect lpRect);
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool MoveWindow(IntPtr hWnd,int X, int Y, int nWidth, int nHeight, bool bRepaint);
+
         [DllImport("user32.dll", CharSet = CharSet.Ansi)]
         static extern int GetWindowTextA(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
@@ -54,6 +58,12 @@ namespace Peeky_Blinkers
             }
             return _singleWin;
         }
+        
+        public List<WindowInfo> GetCurrentWindowList()
+        {
+            GetEnumWindow();
+            return FilterWindowWithTitles();
+        }
 
         public void SelectWindow(IntPtr hWnd)
         {
@@ -65,46 +75,25 @@ namespace Peeky_Blinkers
 
         private bool EnumWindowsCallBack(IntPtr hWnd, IntPtr lParam)
         {
-            WinRect rect;
-            if (GetWindowRect(hWnd, out rect))
+            if (GetWindowRect(hWnd, out WinRect rect) && IsWindowVisible(hWnd))
             {
-                WindowInfo info = new WindowInfo(hWnd, rect.left, rect.top, rect.right, rect.bottom, null, true);
-                _windowList.Add(info);
+                WindowInfo info = new WindowInfo(hWnd, rect.left, rect.top, rect.right, rect.bottom, null, false);
+                _rawWindowList.Add(info);
             }
             return true;
         }
         
-        public List<WindowInfo> GetEnumWindow()
+        public void GetEnumWindow()
         {
-            _windowList.Clear(); 
+            _rawWindowList.Clear(); 
             EnumWindowsProc enumWinProc = new EnumWindowsProc(EnumWindowsCallBack);
-            EnumWindows(enumWinProc, IntPtr.Zero);
-            return _windowList;
+            EnumDesktopWindows(IntPtr.Zero,enumWinProc, IntPtr.Zero);
         }
 
-        public void FilterWindowVisible()
+        public List<WindowInfo> FilterWindowWithTitles( )
         {
-
-            List<WindowInfo> removeList = new List<WindowInfo>();
-            foreach(var window in _windowList)
-            {
-                if(!IsWindowVisible(window.HWnd))
-                {
-                    removeList.Add(window);
-                }
-            }
-
-            foreach(var reject in removeList)
-            {
-                _windowList.Remove(reject);
-            }
-        }
-
-        public void FilterWindowTitles()
-        {
-
-            List<WindowInfo> removeList = new List<WindowInfo>();
-            foreach(var window in _windowList)
+            List<WindowInfo> newList = new List<WindowInfo>();
+            foreach(WindowInfo window in _rawWindowList)
             {
                 StringBuilder buffer = new StringBuilder(256);
                 int result = GetWindowTextA(window.HWnd, buffer, buffer.Capacity);
@@ -112,17 +101,22 @@ namespace Peeky_Blinkers
                 if (result > 0)
                 {
                     window.Title = buffer.ToString();
-                }
-                else
-                {
-                    removeList.Add(window);
+                    newList.Add(window);
                 }
             }
 
-            foreach(var reject in removeList)
+            var OldWindowDict = _windowList.ToDictionary(win => win.HWnd);
+            foreach(WindowInfo newWin in newList)
             {
-                _windowList.Remove(reject);
+                if(OldWindowDict.TryGetValue(newWin.HWnd, out WindowInfo oldWin)){
+                    if(newWin.HWnd == oldWin.HWnd)
+                    {
+                        newWin.IsSelected = oldWin.IsSelected;
+                    }
+                }
             }
+            _windowList = newList;
+            return newList;
         }
 
         public void Dispose()
@@ -130,6 +124,50 @@ namespace Peeky_Blinkers
             throw new NotImplementedException();
         }
 
+        internal void Swap()
+        {
+            List<WindowInfo> selectedWindowList = new List<WindowInfo> ();
+            List<IntPtr> hwndList = new List<IntPtr>();
+            foreach(var window in _windowList)
+            {
+                if (window.IsSelected)
+                {
+                    hwndList.Add(window.HWnd);
+                    selectedWindowList.Add(window);
+                }
+            }
+
+            int safe = hwndList.Count();
+            int count = selectedWindowList.Count();
+            int nextIndex = 0;
+
+            for(int index = 0; index < count; ++index)
+            {
+                nextIndex = index + 1;
+                if(nextIndex < safe)
+                {
+                    selectedWindowList[index].HWnd = hwndList[nextIndex];
+                }
+                else
+                {
+                    selectedWindowList[index].HWnd = hwndList[0] ;
+                }
+            }
+
+            foreach(var movedWindow in selectedWindowList)
+            {
+                if(!MoveWindow(movedWindow.HWnd
+                    , movedWindow.Left
+                    , movedWindow.Top
+                    , movedWindow.Right - movedWindow.Left
+                    , movedWindow.Bottom - movedWindow.Top
+                    , true
+                    ))
+                {
+                    MessageBox.Show(movedWindow.Title);
+                }
+            }
+        }
     }
 
     internal class WindowInfo
@@ -145,8 +183,8 @@ namespace Peeky_Blinkers
             IsSelected = isSelected;
         }
 
-        public IntPtr HWnd { get; }
-        public int Left { get; }
+        public IntPtr HWnd { get; set; }
+        public int Left { get; } 
         public int Top { get; }
         public int Right { get; }
         public int Bottom { get; }

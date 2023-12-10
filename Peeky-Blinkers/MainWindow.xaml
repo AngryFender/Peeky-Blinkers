@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Peeky_Blinkers"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <StackPanel>
         <ListView Name="WinListView">
             <ListView.View>
                 <GridView>
@@ -59,14 +59,10 @@
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>
                     </GridViewColumn>
-
-
-
-
                 </GridView>
             </ListView.View>
-
         </ListView>
-
-    </Grid>
+        <Button x:Name="BtnRefresh" Height="20" Width="60" Content="Refresh"/>
+        <Button x:Name="BtnSwap" Height="20" Width="60" Content="Swap"/>
+    </StackPanel>
 </Window>
