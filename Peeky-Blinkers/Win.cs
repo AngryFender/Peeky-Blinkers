@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Forms;
 
 namespace Peeky_Blinkers
 {
@@ -222,6 +224,8 @@ namespace Peeky_Blinkers
         public List<WindowInfo> FilterWindowWithTitles( )
         {
             List<WindowInfo> newList = new List<WindowInfo>();
+            var OldWindowDict = _windowList.ToDictionary(win => win.HWnd);
+
             foreach(WindowInfo window in _rawWindowList)
             {
                 StringBuilder buffer = new StringBuilder(256);
@@ -231,20 +235,52 @@ namespace Peeky_Blinkers
                 {
                     window.Title = buffer.ToString();
                     newList.Add(window);
-                }
-            }
 
-            var OldWindowDict = _windowList.ToDictionary(win => win.HWnd);
-            foreach(WindowInfo newWin in newList)
-            {
-                if(OldWindowDict.TryGetValue(newWin.HWnd, out WindowInfo oldWin)){
-                    if(newWin.HWnd == oldWin.HWnd)
-                    {
-                        newWin.IsSelected = oldWin.IsSelected;
+                    if(OldWindowDict.TryGetValue(window.HWnd, out WindowInfo oldWin)){
+                        if(window.HWnd == oldWin.HWnd)
+                        {
+                            window.IsSelected = oldWin.IsSelected;
+                        }
                     }
                 }
             }
-            _windowList = newList;
+
+            _windowList = ScreenOrder(newList);
+            return _windowList;
+        }
+
+        public List<WindowInfo> ScreenOrder(List<WindowInfo> list)
+        {
+            List<WindowInfo> newList = new List<WindowInfo>();
+
+            Screen screen = Screen.PrimaryScreen;
+            int maxWidth = screen.Bounds.Width;
+            int maxHeight = screen.Bounds.Height;
+            int width = 100;
+
+            list.Sort((x, y) => x.Left.CompareTo(y.Left));
+
+            for(int w = width; w < maxWidth; w += width)
+            {
+                List<WindowInfo> column = new List<WindowInfo>();
+
+                foreach (WindowInfo window in list)
+                {
+                    if (w > window.Left && w < window.Right)
+                    {
+                        column.Add(window);
+                    }
+                }
+
+                column.Sort((x,y) => x.Top.CompareTo(y.Top));
+
+                foreach (WindowInfo window in column)
+                {
+                    newList.Add(window);
+                    list.Remove(window);
+                }
+            }
+
             return newList;
         }
 
