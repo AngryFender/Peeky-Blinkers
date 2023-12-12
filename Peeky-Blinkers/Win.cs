@@ -29,7 +29,7 @@ namespace Peeky_Blinkers
         private IntPtr _keyboardEventHook;
         private WinEventProc _winEventProc;
         private KeyboardProc _keyboardProc;
-
+        private WinRect _cursorWindow;
  
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         private delegate void WinEventProc(IntPtr hWinEventHook
@@ -105,6 +105,11 @@ namespace Peeky_Blinkers
         [DllImport("kernel32.dll")]
         static extern IntPtr LoadLibrary(string lpFileName);
 
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        static extern bool SetForegroundWindow(IntPtr hWnd);
 
         public static Win GetInstance()
         {
@@ -251,6 +256,9 @@ namespace Peeky_Blinkers
 
         internal void Swap()
         {
+            IntPtr cursorHWnd = GetForegroundWindow();
+            GetWindowRect(cursorHWnd, out  _cursorWindow);
+
             List<WindowInfo> selectedWindowList = new List<WindowInfo> ();
             List<IntPtr> hwndList = new List<IntPtr>();
             foreach(var window in _windowList)
@@ -279,15 +287,25 @@ namespace Peeky_Blinkers
 
             foreach(var movedWindow in selectedWindowList)
             {
-                if(!MoveWindow(movedWindow.HWnd
+                MoveWindow(movedWindow.HWnd
                     , movedWindow.Left
                     , movedWindow.Top
                     , movedWindow.Right - movedWindow.Left
                     , movedWindow.Bottom - movedWindow.Top
-                    , true
-                    ))
+                    , true );
+            }
+        }
+
+        internal void SetCursor()
+        {
+            foreach(var window in _windowList)
+            {
+                if(_cursorWindow.left == window.Left &&
+                   _cursorWindow.top == window.Top &&
+                   _cursorWindow.right == window.Right &&
+                   _cursorWindow.bottom == window.Bottom)
                 {
-                    MessageBox.Show(movedWindow.Title);
+                    SetForegroundWindow(window.HWnd);
                 }
             }
         }
