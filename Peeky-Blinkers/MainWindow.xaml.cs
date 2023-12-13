@@ -20,6 +20,7 @@ namespace Peeky_Blinkers
         private NotifyIcon _notifyIcon;
         private readonly Win _win = Win.GetInstance();
         private bool _exitRequested = false;
+        private bool _initialNotification = true;
         
         public MainWindow()
         {
@@ -42,8 +43,6 @@ namespace Peeky_Blinkers
             trayMenu.MenuItems.Add("Exit", (s, e) => CloseApplication());
             _notifyIcon.ContextMenu = trayMenu;
 
-            List<WindowInfo> winList = _win.GetCurrentWindowList();
-            WinListView.ItemsSource = winList;
             _win.WindowAddRemoveHandler += WindowAddRemoveHandle;
             _win.SwapHandler += WindowSwapHandle;
         }
@@ -98,7 +97,11 @@ namespace Peeky_Blinkers
         {
             this.Hide();
             _notifyIcon.Visible = true;
-            _notifyIcon.ShowBalloonTip(1);
+            if (_initialNotification)
+            {
+                _initialNotification = false;
+                _notifyIcon.ShowBalloonTip(1);
+            }
         }
     }
 }

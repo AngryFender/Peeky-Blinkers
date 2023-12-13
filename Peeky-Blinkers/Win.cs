@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
-using System.Collections.Generic;
-using System.Windows;
 using System.Windows.Forms;
 
 namespace Peeky_Blinkers
@@ -32,6 +30,7 @@ namespace Peeky_Blinkers
         private WinEventProc _winEventProc;
         private KeyboardProc _keyboardProc;
         private WinRect _cursorWindow;
+        private bool forwardSequence = true;
  
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         private delegate void WinEventProc(IntPtr hWinEventHook
@@ -162,6 +161,14 @@ namespace Peeky_Blinkers
                         isRightShiftPressedDown = true;
                     }
 
+                    if(isLeftShiftPressedDown && !isRightShiftPressedDown)
+                    {
+                        forwardSequence = true;
+                    }else if(!isLeftShiftPressedDown && isRightShiftPressedDown)
+                    {
+                        forwardSequence = false;
+                    }
+
                     if (isLeftShiftPressedDown && isRightShiftPressedDown)
                     {
                         RaiseSwap();
@@ -256,7 +263,8 @@ namespace Peeky_Blinkers
             Screen screen = Screen.PrimaryScreen;
             int maxWidth = screen.Bounds.Width;
             int maxHeight = screen.Bounds.Height;
-            int width = 100;
+            int blockNo = 8;
+            int width = maxHeight/blockNo;
 
             list.Sort((x, y) => x.Left.CompareTo(y.Left));
 
@@ -280,6 +288,11 @@ namespace Peeky_Blinkers
                     list.Remove(window);
                 }
             }
+            if (forwardSequence) 
+            {
+                newList.Reverse();
+            }
+
 
             return newList;
         }
