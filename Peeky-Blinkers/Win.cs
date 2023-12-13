@@ -24,6 +24,9 @@ namespace Peeky_Blinkers
         private const int WM_SYSKEYUP = 0x0105;
         private const int VK_LSHIFT = 0xA0;
         private const int VK_RSHIFT = 0xA1;
+        private const byte VK_ALT = 0x12;
+        private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
+        private const uint KEYEVENTF_KEYUP = 0x0002;
 
         private IntPtr _winEventHook;
         private IntPtr _keyboardEventHook;
@@ -112,6 +115,10 @@ namespace Peeky_Blinkers
         [DllImport("user32.dll")]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+
+
         public static Win GetInstance()
         {
             if (null == _singleWin)
@@ -144,49 +151,51 @@ namespace Peeky_Blinkers
 
         private IntPtr KeyboardEventHookHandler(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (_windowList.Count() >0 && nCode >= 0)
+            int vkCode = Marshal.ReadInt32(lParam);
+            if(vkCode == VK_LSHIFT || vkCode == VK_RSHIFT) 
             {
-                int vkCode = Marshal.ReadInt32(lParam);
-                bool isKeyDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
-                bool isKeyUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
-
-                if (isKeyDown)
+                if (_windowList.Count() >0 && nCode >= 0)
                 {
-                    if (vkCode == VK_LSHIFT)
+                    bool isKeyDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
+                    bool isKeyUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
+
+                    if (isKeyDown)
                     {
-                        isLeftShiftPressedDown = true;
-                    }
-                    else if (vkCode == VK_RSHIFT)
-                    {
-                        isRightShiftPressedDown = true;
+                        if (vkCode == VK_LSHIFT)
+                        {
+                            isLeftShiftPressedDown = true;
+                        }
+                        else if (vkCode == VK_RSHIFT)
+                        {
+                            isRightShiftPressedDown = true;
+                        }
+
+                        if(isLeftShiftPressedDown && !isRightShiftPressedDown)
+                        {
+                            forwardSequence = true;
+                        }else if(!isLeftShiftPressedDown && isRightShiftPressedDown)
+                        {
+                            forwardSequence = false;
+                        }
+
+                        if (isLeftShiftPressedDown && isRightShiftPressedDown)
+                        {
+                            RaiseSwap();
+                        }
                     }
 
-                    if(isLeftShiftPressedDown && !isRightShiftPressedDown)
-                    {
-                        forwardSequence = true;
-                    }else if(!isLeftShiftPressedDown && isRightShiftPressedDown)
-                    {
-                        forwardSequence = false;
-                    }
-
-                    if (isLeftShiftPressedDown && isRightShiftPressedDown)
-                    {
-                        RaiseSwap();
+                    if (isKeyUp)
+                    { 
+                        if (vkCode == VK_LSHIFT)
+                        {
+                            isLeftShiftPressedDown = false;
+                        }
+                        else if (vkCode == VK_RSHIFT)
+                        {
+                            isRightShiftPressedDown = false;
+                        }
                     }
                 }
-
-                if (isKeyUp)
-                { 
-                    if (vkCode == VK_LSHIFT)
-                    {
-                        isLeftShiftPressedDown = false;
-                    }
-                    else if (vkCode == VK_RSHIFT)
-                    {
-                        isRightShiftPressedDown = false;
-                    }
-                }
-
             }
             return CallNextHookEx(_keyboardEventHook, nCode, wParam, lParam);
         }
@@ -293,7 +302,6 @@ namespace Peeky_Blinkers
                 newList.Reverse();
             }
 
-
             return newList;
         }
 
@@ -354,7 +362,13 @@ namespace Peeky_Blinkers
                    _cursorWindow.right == window.Right &&
                    _cursorWindow.bottom == window.Bottom)
                 {
+                    // Simulate Alt key press to bypass restrictions on SetForegroundWindow
+                    keybd_event(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY, UIntPtr.Zero);
+
                     SetForegroundWindow(window.HWnd);
+
+                    // Simulate Alt key release
+                    keybd_event(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, UIntPtr.Zero);
                 }
             }
         }
