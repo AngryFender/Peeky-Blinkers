@@ -12,6 +12,7 @@ namespace Peeky_Blinkers
         private static Win _singleWin;
         private static List<WindowInfo> _windowList = new List<WindowInfo>();
         private static List<WindowInfo> _rawWindowList = new List<WindowInfo>();
+        private List<string> _banList = new List<string> {"Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
@@ -250,6 +251,13 @@ namespace Peeky_Blinkers
                 if (result > 0)
                 {
                     window.Title = buffer.ToString();
+                    bool isTitleBanned = _banList. Contains(window.Title);
+
+                    if (isTitleBanned)
+                    {
+                        continue;
+                    }
+
                     newList.Add(window);
 
                     if(OldWindowDict.TryGetValue(window.HWnd, out WindowInfo oldWin)){
