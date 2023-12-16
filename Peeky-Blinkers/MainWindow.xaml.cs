@@ -45,6 +45,29 @@ namespace Peeky_Blinkers
 
             _win.WindowAddRemoveHandler += WindowAddRemoveHandle;
             _win.SwapHandler += WindowSwapHandle;
+            _win.ShowWindowsOverlay += ShowWindowsOverlyHandle;
+        }
+
+        private void ShowWindowsOverlyHandle(object sender, EventArgs e)
+        {
+            List<WindowInfo> winList = _win.GetCurrentWindowList();
+            WinListView.ItemsSource = winList;
+
+            foreach(WindowInfo win in winList)
+            {
+                
+                float dpiFactor = _win.GetDpiFactorForSpecificWindow(win.HWnd);
+
+                var overlay = new Overlay()
+                {
+                    Left = win.Left/dpiFactor,
+                    Top = win.Top/dpiFactor,
+                    Width = (win.Right - win.Left)/dpiFactor,
+                    Height = (win.Bottom - win.Top)/dpiFactor,
+                    ResizeMode = ResizeMode.NoResize
+                };
+                overlay.Show();
+            }
         }
 
         private void MainWindowStateChanged(object sender, EventArgs e)

@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Reflection;
+using System.Windows;
+using System.Windows.Navigation;
 
 namespace Peeky_Blinkers
 {
@@ -20,12 +23,14 @@ namespace Peeky_Blinkers
         private const int WM_KEYDOWN = 0x0100;
         private static bool isLeftShiftPressedDown = false;
         private static bool isRightShiftPressedDown = false;
+        private static bool isLAltPressedDown = false;
         private const int WM_SYSKEYDOWN = 0x0104;
         private const int WM_KEYUP = 0x0101;
         private const int WM_SYSKEYUP = 0x0105;
         private const int VK_LSHIFT = 0xA0;
         private const int VK_RSHIFT = 0xA1;
         private const byte VK_ALT = 0x12;
+        private const byte VK_LALT = 164;
         private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
         private const uint KEYEVENTF_KEYUP = 0x0002;
 
@@ -35,7 +40,7 @@ namespace Peeky_Blinkers
         private KeyboardProc _keyboardProc;
         private WinRect _cursorWindow;
         private bool forwardSequence = true;
- 
+
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         private delegate void WinEventProc(IntPtr hWinEventHook
                                             , uint eventType
@@ -119,6 +124,8 @@ namespace Peeky_Blinkers
         [DllImport("user32.dll")]
         static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
+        [DllImport("user32.dll")]
+        static extern uint GetDpiForWindow(IntPtr hWnd);
 
         public static Win GetInstance()
         {
@@ -153,7 +160,7 @@ namespace Peeky_Blinkers
         private IntPtr KeyboardEventHookHandler(int nCode, IntPtr wParam, IntPtr lParam)
         {
             int vkCode = Marshal.ReadInt32(lParam);
-            if(vkCode == VK_LSHIFT || vkCode == VK_RSHIFT) 
+            if (vkCode == VK_LSHIFT || vkCode == VK_RSHIFT || vkCode == VK_LALT)
             {
                 if (_windowList.Count() >0 && nCode >= 0)
                 {
@@ -162,38 +169,39 @@ namespace Peeky_Blinkers
 
                     if (isKeyDown)
                     {
-                        if (vkCode == VK_LSHIFT)
+                        switch (vkCode)
                         {
-                            isLeftShiftPressedDown = true;
-                        }
-                        else if (vkCode == VK_RSHIFT)
-                        {
-                            isRightShiftPressedDown = true;
+                            case VK_LSHIFT: isLeftShiftPressedDown = true; break;
+                            case VK_RSHIFT: isRightShiftPressedDown = true; break;
+                            case VK_LALT: isLAltPressedDown = true; break;
                         }
 
                         if(isLeftShiftPressedDown && !isRightShiftPressedDown)
                         {
                             forwardSequence = true;
-                        }else if(!isLeftShiftPressedDown && isRightShiftPressedDown)
+                        }
+                        else if(!isLeftShiftPressedDown && isRightShiftPressedDown)
                         {
                             forwardSequence = false;
                         }
 
-                        if (isLeftShiftPressedDown && isRightShiftPressedDown)
+                        if (isLeftShiftPressedDown && isRightShiftPressedDown && !isLAltPressedDown)
                         {
                             RaiseSwap();
+                        }
+                        else if (isLeftShiftPressedDown && isRightShiftPressedDown && isLAltPressedDown)
+                        {
+                            RaiseShowWindowsOverlay();
                         }
                     }
 
                     if (isKeyUp)
                     { 
-                        if (vkCode == VK_LSHIFT)
+                        switch (vkCode)
                         {
-                            isLeftShiftPressedDown = false;
-                        }
-                        else if (vkCode == VK_RSHIFT)
-                        {
-                            isRightShiftPressedDown = false;
+                            case VK_LSHIFT: isLeftShiftPressedDown = false; break;
+                            case VK_RSHIFT: isRightShiftPressedDown = false; break;
+                            case VK_LALT: isLAltPressedDown = false; break;
                         }
                     }
                 }
@@ -206,6 +214,20 @@ namespace Peeky_Blinkers
         public void RaiseSwap()
         {
             SwapHandler?.Invoke(this, EventArgs.Empty);
+        }
+
+        public event EventHandler ShowWindowsOverlay;
+        
+        public void RaiseShowWindowsOverlay()
+        {
+            ShowWindowsOverlay?.Invoke(this,EventArgs.Empty);
+        }
+
+        public float GetDpiFactorForSpecificWindow(IntPtr hWnd)
+        {
+            float dpi = GetDpiForWindow(hWnd);
+            float g_DPIScale = dpi / 96.0f;
+            return g_DPIScale != 0.0f ?  g_DPIScale: 1.0f;
         }
 
         private void WinEventHookHandler(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
