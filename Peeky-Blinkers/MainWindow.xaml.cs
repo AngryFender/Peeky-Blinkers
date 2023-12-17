@@ -21,6 +21,7 @@ namespace Peeky_Blinkers
         private readonly Win _win = Win.GetInstance();
         private bool _exitRequested = false;
         private bool _initialNotification = true;
+        private List<Overlay> _overlaysList = new List<Overlay>();
         
         public MainWindow()
         {
@@ -45,19 +46,27 @@ namespace Peeky_Blinkers
 
             _win.WindowAddRemoveHandler += WindowAddRemoveHandle;
             _win.SwapHandler += WindowSwapHandle;
-            _win.ShowWindowsOverlay += ShowWindowsOverlyHandle;
+            _win.ShowWindowsOverlay += ShowWindowsOverlayHandle;
+            _win.HideWindowOverlay += HideWindowsOverlayHandle;
         }
 
-        private void ShowWindowsOverlyHandle(object sender, EventArgs e)
+        private void HideWindowsOverlayHandle(object sender, EventArgs e)
+        {
+            foreach(Overlay overlay in _overlaysList)
+            {
+                overlay.Hide();
+            }
+            _overlaysList.Clear();
+        }
+
+        private void ShowWindowsOverlayHandle(object sender, EventArgs e)
         {
             List<WindowInfo> winList = _win.GetCurrentWindowList();
             WinListView.ItemsSource = winList;
 
             foreach(WindowInfo win in winList)
             {
-                
                 float dpiFactor = _win.GetDpiFactorForSpecificWindow(win.HWnd);
-
                 var overlay = new Overlay()
                 {
                     Left = win.Left/dpiFactor,
@@ -67,6 +76,7 @@ namespace Peeky_Blinkers
                     ResizeMode = ResizeMode.NoResize
                 };
                 overlay.Show();
+                _overlaysList.Add(overlay);
             }
         }
 

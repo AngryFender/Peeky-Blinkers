@@ -15,22 +15,23 @@ namespace Peeky_Blinkers
         private static Win _singleWin;
         private static List<WindowInfo> _windowList = new List<WindowInfo>();
         private static List<WindowInfo> _rawWindowList = new List<WindowInfo>();
-        private List<string> _banList = new List<string> {"Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
+        private static  List<string> _banList = new List<string> {"Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x0100;
-        private static bool isLeftShiftPressedDown = false;
-        private static bool isRightShiftPressedDown = false;
-        private static bool isLAltPressedDown = false;
+        private bool isLeftShiftPressedDown = false;
+        private bool isRightShiftPressedDown = false;
+        private bool isLAltPressedDown = false;
+        private bool isOverlayShown = false;
         private const int WM_SYSKEYDOWN = 0x0104;
         private const int WM_KEYUP = 0x0101;
         private const int WM_SYSKEYUP = 0x0105;
         private const int VK_LSHIFT = 0xA0;
         private const int VK_RSHIFT = 0xA1;
-        private const byte VK_ALT = 0x12;
-        private const byte VK_LALT = 164;
+        private const int VK_ALT = 0x12;
+        private const int VK_LALT = 164;
         private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
         private const uint KEYEVENTF_KEYUP = 0x0002;
 
@@ -159,14 +160,16 @@ namespace Peeky_Blinkers
 
         private IntPtr KeyboardEventHookHandler(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            int vkCode = Marshal.ReadInt32(lParam);
-            if (vkCode == VK_LSHIFT || vkCode == VK_RSHIFT || vkCode == VK_LALT)
+            if (_windowList.Count() > 0 && nCode >= 0)
             {
-                if (_windowList.Count() >0 && nCode >= 0)
-                {
-                    bool isKeyDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
-                    bool isKeyUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
+                bool isKeyDown = wParam == (IntPtr)WM_KEYDOWN || wParam == (IntPtr)WM_SYSKEYDOWN;
+                bool isKeyUp = wParam == (IntPtr)WM_KEYUP || wParam == (IntPtr)WM_SYSKEYUP;
 
+                int vkCode = Marshal.ReadInt32(lParam);
+                if (vkCode == VK_LSHIFT
+                 || vkCode == VK_RSHIFT
+                 || vkCode == VK_LALT)
+                {
                     if (isKeyDown)
                     {
                         switch (vkCode)
@@ -176,27 +179,34 @@ namespace Peeky_Blinkers
                             case VK_LALT: isLAltPressedDown = true; break;
                         }
 
-                        if(isLeftShiftPressedDown && !isRightShiftPressedDown)
+                        if (isLeftShiftPressedDown && !isRightShiftPressedDown)
                         {
+                            HideAllWindowOverlay();
                             forwardSequence = true;
                         }
-                        else if(!isLeftShiftPressedDown && isRightShiftPressedDown)
+                        else if (!isLeftShiftPressedDown && isRightShiftPressedDown)
                         {
+                            HideAllWindowOverlay();
                             forwardSequence = false;
                         }
 
                         if (isLeftShiftPressedDown && isRightShiftPressedDown && !isLAltPressedDown)
                         {
+                            HideAllWindowOverlay();
                             RaiseSwap();
                         }
                         else if (isLeftShiftPressedDown && isRightShiftPressedDown && isLAltPressedDown)
                         {
-                            RaiseShowWindowsOverlay();
+                            if (!isOverlayShown)
+                            {
+                                RaiseShowWindowsOverlay();
+                                isOverlayShown = true;
+                            }
                         }
                     }
 
                     if (isKeyUp)
-                    { 
+                    {
                         switch (vkCode)
                         {
                             case VK_LSHIFT: isLeftShiftPressedDown = false; break;
@@ -205,8 +215,24 @@ namespace Peeky_Blinkers
                         }
                     }
                 }
+                else
+                {
+                    if (isKeyDown && !isLAltPressedDown && !isLAltPressedDown)
+                    {
+                        HideAllWindowOverlay();
+                    }
+                }
             }
             return CallNextHookEx(_keyboardEventHook, nCode, wParam, lParam);
+        }
+
+        private void HideAllWindowOverlay()
+        {
+            if (isOverlayShown)
+            {
+                RaiseHideWindowsOverlay();
+                isOverlayShown = false;
+            }
         }
 
         public event EventHandler SwapHandler;
@@ -221,6 +247,13 @@ namespace Peeky_Blinkers
         public void RaiseShowWindowsOverlay()
         {
             ShowWindowsOverlay?.Invoke(this,EventArgs.Empty);
+        }
+
+        public event EventHandler HideWindowOverlay;
+
+        public void RaiseHideWindowsOverlay()
+        {
+            HideWindowOverlay?.Invoke(this,EventArgs.Empty);
         }
 
         public float GetDpiFactorForSpecificWindow(IntPtr hWnd)
