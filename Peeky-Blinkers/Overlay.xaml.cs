@@ -19,9 +19,57 @@ namespace Peeky_Blinkers
     /// </summary>
     public partial class Overlay : Window
     {
-        public Overlay()
+        private const string _unselectedColour = "#18FF0000";
+        private const string _selectedColour = "#1800FF00";
+        private WindowInfo _winInfo;
+        internal Overlay(WindowInfo info)
         {
             InitializeComponent();
+            _winInfo = info;
+            BtnSelect.Click += BtnSelectClicked;
+        }
+
+        public event EventHandler<OverlayEventArgs> OverlayUpdated;
+
+        public void RaisedOverlayUpdated(OverlayEventArgs args)
+        {
+            OverlayUpdated?.Invoke(this, args);
+        }
+
+        internal void ShowUpdate()
+        {
+            ChangeBtnColour();
+            this.Show();
+        }
+
+        private void BtnSelectClicked(object sender, RoutedEventArgs e)
+        {
+            _winInfo.IsSelected = !_winInfo.IsSelected;
+            ChangeBtnColour();
+            RaisedOverlayUpdated(new OverlayEventArgs(_winInfo.HWnd, _winInfo.IsSelected));
+        }
+
+        private void ChangeBtnColour()
+        {            
+            if (_winInfo.IsSelected)
+            {
+                BtnSelect.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_selectedColour));
+            }
+            else
+            {
+                BtnSelect.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_unselectedColour));
+            }
+        }
+
+        public class OverlayEventArgs : EventArgs
+        {
+            public IntPtr HWnd { get; }
+            public bool IsSelected { get; }
+            public OverlayEventArgs( IntPtr hWnd, bool isSelected)
+            {
+                HWnd = hWnd;
+                IsSelected = isSelected;
+            }
         }
     }
 }

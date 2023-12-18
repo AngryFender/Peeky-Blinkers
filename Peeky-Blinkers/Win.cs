@@ -15,7 +15,7 @@ namespace Peeky_Blinkers
         private static Win _singleWin;
         private static List<WindowInfo> _windowList = new List<WindowInfo>();
         private static List<WindowInfo> _rawWindowList = new List<WindowInfo>();
-        private static  List<string> _banList = new List<string> {"Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
+        private static readonly List<string> _banList = new List<string> {"Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
@@ -43,6 +43,8 @@ namespace Peeky_Blinkers
         private bool forwardSequence = true;
 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        EnumWindowsProc _enumWinProc;
+
         private delegate void WinEventProc(IntPtr hWinEventHook
                                             , uint eventType
                                             , IntPtr hwnd
@@ -139,6 +141,8 @@ namespace Peeky_Blinkers
 
         private Win()
         {
+            _enumWinProc = new EnumWindowsProc(EnumWindowsCallBack);
+
             _winEventProc = new WinEventProc(WinEventHookHandler);
             _winEventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND
                                             , EVENT_SYSTEM_FOREGROUND
@@ -289,8 +293,7 @@ namespace Peeky_Blinkers
         public void GetEnumWindow()
         {
             _rawWindowList.Clear(); 
-            EnumWindowsProc enumWinProc = new EnumWindowsProc(EnumWindowsCallBack);
-            EnumDesktopWindows(IntPtr.Zero,enumWinProc, IntPtr.Zero);
+            EnumDesktopWindows(IntPtr.Zero,_enumWinProc, IntPtr.Zero);
         }
 
         public List<WindowInfo> FilterWindowWithTitles( )

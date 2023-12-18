@@ -9,6 +9,7 @@ using System;
 using System.ComponentModel;
 using ContextMenu = System.Windows.Forms.ContextMenu;
 using System.Windows.Input;
+using static Peeky_Blinkers.Overlay;
 
 namespace Peeky_Blinkers
 {
@@ -55,6 +56,7 @@ namespace Peeky_Blinkers
             foreach(Overlay overlay in _overlaysList)
             {
                 overlay.Hide();
+                overlay.OverlayUpdated -= OverlayUpdatedHandler;
             }
             _overlaysList.Clear();
         }
@@ -67,7 +69,7 @@ namespace Peeky_Blinkers
             foreach(WindowInfo win in winList)
             {
                 float dpiFactor = _win.GetDpiFactorForSpecificWindow(win.HWnd);
-                var overlay = new Overlay()
+                var overlay = new Overlay(win)
                 {
                     Left = win.Left/dpiFactor,
                     Top = win.Top/dpiFactor,
@@ -75,9 +77,25 @@ namespace Peeky_Blinkers
                     Height = (win.Bottom - win.Top)/dpiFactor,
                     ResizeMode = ResizeMode.NoResize
                 };
-                overlay.Show();
+                overlay.ShowUpdate();
+                overlay.OverlayUpdated += OverlayUpdatedHandler;
                 _overlaysList.Add(overlay);
             }
+        }
+
+        private void OverlayUpdatedHandler(object sender, OverlayEventArgs e)
+        {
+            List<WindowInfo> winList = _win.GetCurrentWindowList();
+            
+            foreach(WindowInfo win in winList)
+            {
+                if(win.HWnd == e.HWnd)
+                {
+                    win.IsSelected = e.IsSelected;
+                }
+            }
+
+            WinListView.ItemsSource = winList;
         }
 
         private void MainWindowStateChanged(object sender, EventArgs e)

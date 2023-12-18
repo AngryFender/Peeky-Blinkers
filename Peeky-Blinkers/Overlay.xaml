@@ -8,16 +8,22 @@
         Background="Transparent"
         AllowsTransparency="True"
         mc:Ignorable="d"
-        Title="Peeky Blinkers Overlay" Height="450" Width="800">
+        Title="Peeky Blinkers Overlay" Height="450" Width="800"
+        Topmost="True">
 
-    <Button >
+
+    <Button Name="BtnSelect">
         <Button.Style>
             <Style TargetType="{x:Type Button}">
                 <Setter Property="Background" Value="#18FF0000"/>
+                <Setter Property="BorderBrush" Value="Black"/>
+                <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="{x:Type Button}">
-                            <Border Background="{TemplateBinding Background}" BorderBrush="Black" BorderThickness="1">
+                            <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                BorderThickness="{TemplateBinding BorderThickness}">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </ControlTemplate>
@@ -25,7 +31,8 @@
                 </Setter>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#1800FF00"/>
+                        <Setter Property="BorderBrush" Value="White"/>
+                        <Setter Property="BorderThickness" Value="10"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
