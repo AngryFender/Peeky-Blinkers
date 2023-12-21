@@ -9,7 +9,8 @@
         AllowsTransparency="True"
         mc:Ignorable="d"
         Title="Peeky Blinkers Overlay" Height="450" Width="800"
-        Topmost="True">
+        Topmost="True"
+        ShowInTaskbar="False">
 
 
     <Button Name="BtnSelect">
