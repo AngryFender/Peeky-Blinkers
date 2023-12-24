@@ -34,6 +34,7 @@ namespace Peeky_Blinkers
         private const int VK_LALT = 164;
         private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
         private const uint KEYEVENTF_KEYUP = 0x0002;
+        private const int SCREEN_SCAN_SECTIONS = 8;
 
         private IntPtr _winEventHook;
         private IntPtr _keyboardEventHook;
@@ -335,32 +336,33 @@ namespace Peeky_Blinkers
         {
             List<WindowInfo> newList = new List<WindowInfo>();
 
-            Screen screen = Screen.PrimaryScreen;
-            int maxWidth = screen.Bounds.Width;
-            int maxHeight = screen.Bounds.Height;
-            int blockNo = 8;
-            int width = maxHeight/blockNo;
-
-            list.Sort((x, y) => x.Left.CompareTo(y.Left));
-
-            for(int w = width; w < maxWidth; w += width)
+            var Screens = Screen.AllScreens;
+            foreach (var screen in Screens)
             {
-                List<WindowInfo> column = new List<WindowInfo>();
+                int maxWidth = screen.Bounds.Width + screen.Bounds.X;
+                int width = screen.Bounds.Width / SCREEN_SCAN_SECTIONS;
 
-                foreach (WindowInfo window in list)
+                list.Sort((x, y) => x.Left.CompareTo(y.Left));
+
+                for (int w = screen.Bounds.X; w < maxWidth; w += width)
                 {
-                    if (w > window.Left && w < window.Right)
+                    List<WindowInfo> column = new List<WindowInfo>();
+
+                    foreach (WindowInfo window in list)
                     {
-                        column.Add(window);
+                        if (w > window.Left && w < window.Right)
+                        {
+                            column.Add(window);
+                        }
                     }
-                }
 
-                column.Sort((x,y) => x.Top.CompareTo(y.Top));
+                    column.Sort((x, y) => x.Top.CompareTo(y.Top));
 
-                foreach (WindowInfo window in column)
-                {
-                    newList.Add(window);
-                    list.Remove(window);
+                    foreach (WindowInfo window in column)
+                    {
+                        newList.Add(window);
+                        list.Remove(window);
+                    }
                 }
             }
             if (forwardSequence) 
