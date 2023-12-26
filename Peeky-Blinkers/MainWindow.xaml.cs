@@ -7,6 +7,7 @@ using System.ComponentModel;
 using ContextMenu = System.Windows.Forms.ContextMenu;
 using static Peeky_Blinkers.Overlay;
 using System.Threading;
+using MessageBox = System.Windows.MessageBox;
 
 namespace Peeky_Blinkers
 {
@@ -19,32 +20,45 @@ namespace Peeky_Blinkers
         private readonly WindowManager _winMan = WindowManager.GetInstance(Win.GetInstance());
         private bool _exitRequested = false;
         private bool _initialNotification = true;
+        private readonly Mutex _mutex;
         private List<Overlay> _overlaysList = new List<Overlay>();
-        
+
         public MainWindow()
         {
-            InitializeComponent();
-            this._notifyIcon = new NotifyIcon
+            bool isNewApp = true;
+            _mutex = new Mutex(true, "Peeky Blinkers", out isNewApp);
+
+            if (!isNewApp)
             {
-                BalloonTipText = "Peeky-Blinkers is minimized to tray",
-                BalloonTipTitle = "Peeky-Blinkers",
-                Text = "Peeky-Blinkers",
-                Icon = Properties.Resources.swap,
-                Visible = true
-            };
-            _notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
-            this.Closing += MainWindowClosing;
-            this.StateChanged += MainWindowStateChanged;
+                MessageBox.Show("Peeky Blinkers already running", "Multiple Instances", MessageBoxButton.OK, MessageBoxImage.Error);
 
-            ContextMenu trayMenu = new ContextMenu();
-            trayMenu.MenuItems.Add("Show App", (s, e) => ShowMainWindow());
-            trayMenu.MenuItems.Add("Exit", (s, e) => CloseApplication());
-            _notifyIcon.ContextMenu = trayMenu;
+                this.CloseApplication();
+            }
+            else
+            {
+                InitializeComponent();
+                this._notifyIcon = new NotifyIcon
+                {
+                    BalloonTipText = "Peeky-Blinkers is minimized to tray",
+                    BalloonTipTitle = "Peeky-Blinkers",
+                    Text = "Peeky-Blinkers",
+                    Icon = Properties.Resources.swap,
+                    Visible = true
+                };
+                _notifyIcon.DoubleClick += (s, args) => ShowMainWindow();
+                this.Closing += MainWindowClosing;
+                this.StateChanged += MainWindowStateChanged;
 
-            _winMan.WindowAddRemoveHandler += WindowAddRemoveHandle;
-            _winMan.SwapHandler += WindowSwapHandle;
-            _winMan.ShowWindowsOverlay += ShowWindowsOverlayHandle;
-            _winMan.HideWindowOverlay += HideWindowsOverlayHandle;
+                ContextMenu trayMenu = new ContextMenu();
+                trayMenu.MenuItems.Add("Show App", (s, e) => ShowMainWindow());
+                trayMenu.MenuItems.Add("Exit", (s, e) => CloseApplication());
+                _notifyIcon.ContextMenu = trayMenu;
+
+                _winMan.WindowAddRemoveHandler += WindowAddRemoveHandle;
+                _winMan.SwapHandler += WindowSwapHandle;
+                _winMan.ShowWindowsOverlay += ShowWindowsOverlayHandle;
+                _winMan.HideWindowOverlay += HideWindowsOverlayHandle;
+            }
         }
 
         private void HideWindowsOverlayHandle(object sender, EventArgs e)
