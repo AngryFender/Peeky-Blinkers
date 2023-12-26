@@ -1,15 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Forms;
-using System.Drawing;
 using Application = System.Windows.Application;
-using MessageBox = System.Windows.MessageBox;
 using System;
 using System.ComponentModel;
 using ContextMenu = System.Windows.Forms.ContextMenu;
-using System.Windows.Input;
 using static Peeky_Blinkers.Overlay;
+using System.Threading;
 
 namespace Peeky_Blinkers
 {
@@ -19,7 +16,7 @@ namespace Peeky_Blinkers
     public partial class MainWindow : Window
     {
         private NotifyIcon _notifyIcon;
-        private readonly Win _win = Win.GetInstance();
+        private readonly WindowManager _winMan = WindowManager.GetInstance(Win.GetInstance());
         private bool _exitRequested = false;
         private bool _initialNotification = true;
         private List<Overlay> _overlaysList = new List<Overlay>();
@@ -27,7 +24,6 @@ namespace Peeky_Blinkers
         public MainWindow()
         {
             InitializeComponent();
-
             this._notifyIcon = new NotifyIcon
             {
                 BalloonTipText = "Peeky-Blinkers is minimized to tray",
@@ -45,10 +41,10 @@ namespace Peeky_Blinkers
             trayMenu.MenuItems.Add("Exit", (s, e) => CloseApplication());
             _notifyIcon.ContextMenu = trayMenu;
 
-            _win.WindowAddRemoveHandler += WindowAddRemoveHandle;
-            _win.SwapHandler += WindowSwapHandle;
-            _win.ShowWindowsOverlay += ShowWindowsOverlayHandle;
-            _win.HideWindowOverlay += HideWindowsOverlayHandle;
+            _winMan.WindowAddRemoveHandler += WindowAddRemoveHandle;
+            _winMan.SwapHandler += WindowSwapHandle;
+            _winMan.ShowWindowsOverlay += ShowWindowsOverlayHandle;
+            _winMan.HideWindowOverlay += HideWindowsOverlayHandle;
         }
 
         private void HideWindowsOverlayHandle(object sender, EventArgs e)
@@ -63,12 +59,12 @@ namespace Peeky_Blinkers
 
         private void ShowWindowsOverlayHandle(object sender, EventArgs e)
         {
-            List<WindowInfo> winList = _win.GetCurrentWindowList();
+            List<WindowInfo> winList = _winMan.GetCurrentWindowList();
             WinListView.ItemsSource = winList;
 
             foreach(WindowInfo win in winList)
             {
-                float dpiFactor = _win.GetDpiFactorForSpecificWindow(win.HWnd);
+                float dpiFactor = _winMan.GetDpiFactorForSpecificWindow(win.HWnd);
                 var overlay = new Overlay(win)
                 {
                     Left = win.Left/dpiFactor,
@@ -85,7 +81,7 @@ namespace Peeky_Blinkers
 
         private void OverlayUpdatedHandler(object sender, OverlayEventArgs e)
         {
-            List<WindowInfo> winList = _win.GetCurrentWindowList();
+            List<WindowInfo> winList = _winMan.GetCurrentWindowList();
             
             foreach(WindowInfo win in winList)
             {
@@ -114,13 +110,13 @@ namespace Peeky_Blinkers
 
         private void WindowSwapHandle(object sender, EventArgs e)
         {
-            List<WindowInfo> winList = _win.GetCurrentWindowList();
+            List<WindowInfo> winList = _winMan.GetCurrentWindowList();
             WinListView.ItemsSource = winList;
 
-            _win.Swap();
-             List<WindowInfo> newList = _win.GetCurrentWindowList();
+            _winMan.Swap();
+             List<WindowInfo> newList = _winMan.GetCurrentWindowList();
             WinListView.ItemsSource = newList;
-            _win.SetCursor();
+            _winMan.SetCursor();
        }
 
         private void WindowAddRemoveHandle(object sender, WindowInfoArgs e)
