@@ -2,6 +2,9 @@
 using System.Text;
 using System.Runtime.InteropServices;
 using Peeky_Blinkers.Interface;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Collections.Generic;
 
 namespace Peeky_Blinkers
 {
@@ -172,6 +175,17 @@ namespace Peeky_Blinkers
         public uint GetDpiForWindowInvoke(IntPtr hWnd)
         {
             return GetDpiForWindow(hWnd);
+        }
+
+        public List<Rectangle> GetAllScreensRectangles()
+        {
+            var screens = Screen.AllScreens;
+            List<Rectangle> rectangles = new List<Rectangle>();
+            foreach(var screen in screens)
+            {
+                rectangles.Add(screen.Bounds);
+            }
+            return rectangles;
         }
 
         private Win()

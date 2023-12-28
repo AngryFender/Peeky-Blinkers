@@ -8,7 +8,7 @@ using System.Windows.Forms;
 
 namespace Peeky_Blinkers
 {
-    internal class WindowManager: IDisposable
+    public class WindowManager: IDisposable
     {
         private readonly IWindowApi _winApi;
         private static WindowManager _windowManager;
@@ -255,11 +255,11 @@ namespace Peeky_Blinkers
         {
             List<WindowInfo> newList = new List<WindowInfo>();
 
-            var screens = Screen.AllScreens;
+            var screens = _winApi.GetAllScreensRectangles();
 
             foreach (var screen in screens) {
-                int maxWidth = screen.Bounds.Width;
-                int maxHeight = screen.Bounds.Height;
+                int maxWidth = screen.Width;
+                int maxHeight = screen.Height;
                 int width = maxHeight / SCREEN_SECTIONS;
 
                 list.Sort((x, y) => x.Left.CompareTo(y.Left));
@@ -361,7 +361,7 @@ namespace Peeky_Blinkers
         }
     }
 
-    internal class WindowInfoArgs : EventArgs
+    public class WindowInfoArgs : EventArgs
     {
         private readonly List<WindowInfo> windowList;
 

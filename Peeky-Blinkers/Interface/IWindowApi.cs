@@ -1,21 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Peeky_Blinkers.Interface
 {
-    internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam); 
-    internal delegate void WinEventProc(IntPtr hWinEventHook
+    public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam); 
+    public delegate void WinEventProc(IntPtr hWinEventHook
                                             , uint eventType
                                             , IntPtr hwnd
                                             , int idObject
                                             , int idChild
                                             , uint dwEventThread
                                             , uint dwmsEventTime);
-    internal delegate IntPtr KeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+    public delegate IntPtr KeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
     [StructLayout(LayoutKind.Sequential)]
-    struct WinRect
+    public struct WinRect
     {
         public int left;
         public int top;
@@ -23,7 +25,7 @@ namespace Peeky_Blinkers.Interface
         public int bottom;
     }
 
-    internal interface IWindowApi
+    public interface IWindowApi
     {
         bool EnumDesktopWindowsInvoke(IntPtr hDesktop, EnumWindowsProc eumWinProc, IntPtr lParam);
         IntPtr SetActiveWindowInvoke(IntPtr hWnd);
@@ -54,5 +56,6 @@ namespace Peeky_Blinkers.Interface
         bool SetForegroundWindowInvoke(IntPtr hWnd);
         void keybd_eventInvoke(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
         uint GetDpiForWindowInvoke(IntPtr hWnd);
+        List<Rectangle> GetAllScreensRectangles();
     }
 }
