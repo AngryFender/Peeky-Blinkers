@@ -17,7 +17,7 @@ namespace Peeky_Blinkers
     public partial class MainWindow : Window
     {
         private NotifyIcon _notifyIcon;
-        private readonly WindowManager _winMan = WindowManager.GetInstance(Win.GetInstance());
+        private readonly WindowManager _winMan = new WindowManager(new Win());
         private bool _exitRequested = false;
         private bool _initialNotification = true;
         private readonly Mutex _mutex;

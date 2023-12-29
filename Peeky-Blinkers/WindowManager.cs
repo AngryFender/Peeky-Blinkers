@@ -44,20 +44,7 @@ namespace Peeky_Blinkers
         private WinRect _cursorWindow;
         private EnumWindowsProc _enumWinProc;
 
-
-        public static WindowManager GetInstance(IWindowApi winApi)
-        {
-            if(null == _windowManager)
-            {
-                lock (typeof(WindowManager))
-                {
-                    _windowManager = new WindowManager(winApi);
-                }
-            }
-            return _windowManager;
-        }
-
-        private WindowManager(IWindowApi winApi)
+        public WindowManager(IWindowApi winApi)
         {
             _winApi = winApi;
 

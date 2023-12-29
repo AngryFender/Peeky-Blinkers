@@ -80,18 +80,6 @@ namespace Peeky_Blinkers
         [DllImport("user32.dll")]
         static extern uint GetDpiForWindow(IntPtr hWnd);
 
-        public static Win GetInstance()
-        {
-            if (null == _singleWin)
-            {
-                lock (_object)
-                {
-                    _singleWin = new Win();
-                }
-            }
-            return _singleWin;
-        }
-
         public bool EnumDesktopWindowsInvoke(IntPtr hDesktop, Interface.EnumWindowsProc eumWinProc, IntPtr lParam)
         {
             return EnumDesktopWindows(hDesktop, eumWinProc, lParam);
@@ -188,7 +176,7 @@ namespace Peeky_Blinkers
             return rectangles;
         }
 
-        private Win()
+        public Win()
         {
 
         }
