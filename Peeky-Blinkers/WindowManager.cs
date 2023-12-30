@@ -108,11 +108,7 @@ namespace Peeky_Blinkers
                         }
                         else if (isLeftShiftPressedDown && isRightShiftPressedDown && isLAltPressedDown)
                         {
-                            if (!isOverlayShown)
-                            {
-                                RaiseShowWindowsOverlay();
-                                isOverlayShown = true;
-                            }
+                            RaiseShowWindowsOverlay();
                         }
                     }
 
@@ -148,7 +144,11 @@ namespace Peeky_Blinkers
         
         private void RaiseShowWindowsOverlay()
         {
-            ShowWindowsOverlay?.Invoke(this,EventArgs.Empty);
+            if (!isOverlayShown)
+            {
+                ShowWindowsOverlay?.Invoke(this, EventArgs.Empty);
+                isOverlayShown = true;
+            }
         }
 
         public event EventHandler HideWindowOverlay;
@@ -285,7 +285,7 @@ namespace Peeky_Blinkers
             _winApi.UnhookWindowsHookExInvoke(_keyboardEventHook);
         }
 
-        internal void Swap()
+        internal bool Swap()
         {
             IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
             _winApi.GetWindowRectInvoke(cursorHWnd, out  _cursorWindow);
@@ -299,6 +299,12 @@ namespace Peeky_Blinkers
                     hwndList.Add(window.HWnd);
                     selectedWindowList.Add(window);
                 }
+            }
+
+            if (1 >= selectedWindowList.Count())
+            {
+                RaiseShowWindowsOverlay();
+                return false;
             }
 
             int safe = hwndList.Count();
@@ -325,6 +331,7 @@ namespace Peeky_Blinkers
                     , movedWindow.Bottom - movedWindow.Top
                     , true );
             }
+            return true; 
         }
 
         internal void SetCursor()
