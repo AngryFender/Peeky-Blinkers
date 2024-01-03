@@ -11,11 +11,10 @@ namespace Peeky_Blinkers
     public class WindowManager: IDisposable
     {
         private readonly IWindowApi _winApi;
-        private static WindowManager _windowManager;
 
-        private static List<WindowInfo> _windowList = new List<WindowInfo>();
-        private static List<WindowInfo> _rawWindowList = new List<WindowInfo>();
-        private static readonly List<string> _banList = new List<string> {"Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
+        internal List<WindowInfo> _windowList = new List<WindowInfo>();
+        private List<WindowInfo> _rawWindowList = new List<WindowInfo>();
+        private readonly List<string> _banList = new List<string> {"Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
         private bool _forwardSequence = true;
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
@@ -285,7 +284,7 @@ namespace Peeky_Blinkers
             _winApi.UnhookWindowsHookExInvoke(_keyboardEventHook);
         }
 
-        internal bool Swap()
+        public bool Swap()
         {
             IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
             _winApi.GetWindowRectInvoke(cursorHWnd, out  _cursorWindow);

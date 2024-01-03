@@ -272,5 +272,32 @@ namespace Tests
 
             return true;
         }
+
+        [Fact]
+        public void Test_Swap()
+        {
+            var mock = new Mock<IWindowApi>();
+            WindowManager winMan = new WindowManager(mock.Object);
+
+            var expectedList = new List<WindowInfo>();
+            expectedList.Add(new WindowInfo((IntPtr)3, 0,   0, 400, 400, "Third", true));
+            expectedList.Add(new WindowInfo((IntPtr)2, 400, 0, 400, 400, "Second",true));
+            expectedList.Add(new WindowInfo((IntPtr)1, 800, 0, 400, 400, "First", true));
+
+            var mockList = new List<WindowInfo>();
+            mockList.Add(new WindowInfo((IntPtr)1, 8, 0, 400, 400, "Third", true));
+            mockList.Add(new WindowInfo((IntPtr)2, 400, 0, 400, 400, "Second",true));
+            mockList.Add(new WindowInfo((IntPtr)3, 800, 0, 400, 400, "First", true));
+
+            winMan._windowList = mockList;
+
+            winMan.Swap();
+
+            List<WindowInfo> result = winMan._windowList;
+
+            Assert.True(result.Count() == expectedList.Count());
+
+            Assert.True(CompareWindowInfoLists(result, expectedList));
+        }
     }
 }
