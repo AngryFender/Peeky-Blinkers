@@ -280,20 +280,26 @@ namespace Tests
             WindowManager winMan = new WindowManager(mock.Object);
 
             var expectedList = new List<WindowInfo>();
-            expectedList.Add(new WindowInfo((IntPtr)3, 0,   0, 400, 400, "Third", true));
-            expectedList.Add(new WindowInfo((IntPtr)2, 400, 0, 400, 400, "Second",true));
-            expectedList.Add(new WindowInfo((IntPtr)1, 800, 0, 400, 400, "First", true));
+            expectedList.Add(new WindowInfo((IntPtr)2, 0,   0, 400, 400, "", true));
+            expectedList.Add(new WindowInfo((IntPtr)1, 400, 0, 800, 400, "",true));
+            expectedList.Add(new WindowInfo((IntPtr)3, 800, 0, 1200, 400, "", true));
 
             var mockList = new List<WindowInfo>();
-            mockList.Add(new WindowInfo((IntPtr)1, 8, 0, 400, 400, "Third", true));
-            mockList.Add(new WindowInfo((IntPtr)2, 400, 0, 400, 400, "Second",true));
-            mockList.Add(new WindowInfo((IntPtr)3, 800, 0, 400, 400, "First", true));
+            mockList.Add(new WindowInfo((IntPtr)3, 0, 0, 400, 400, "", true));
+            mockList.Add(new WindowInfo((IntPtr)2, 400, 0, 800, 400, "",true));
+            mockList.Add(new WindowInfo((IntPtr)1, 800, 0, 1200, 400, "", true));
+
+            List<WindowInfo> result = new List<WindowInfo>();
+
+            mock.Setup(x => x.MoveWindowInvoke(It.IsAny<IntPtr>(),It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()))
+                .Returns((IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint) => 
+                {
+                    result.Add(new WindowInfo(hWnd, X, Y, X + nWidth, Y + nHeight,"", true));
+                    return true;
+                });
 
             winMan._windowList = mockList;
-
             winMan.Swap();
-
-            List<WindowInfo> result = winMan._windowList;
 
             Assert.True(result.Count() == expectedList.Count());
 
