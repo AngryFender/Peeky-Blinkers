@@ -244,13 +244,10 @@ namespace Peeky_Blinkers
             var screens = _winApi.GetAllScreensRectangles();
 
             foreach (var screen in screens) {
-                int maxWidth = screen.Width;
-                int maxHeight = screen.Height;
-                int width = maxHeight / SCREEN_SECTIONS;
-
                 list.Sort((x, y) => x.Left.CompareTo(y.Left));
 
-                for (int w = width; w < maxWidth; w += width)
+                int sectionWidth = screen.Width / SCREEN_SECTIONS;
+                for (int w = screen.Left; w < screen.Right; w += sectionWidth)
                 {
                     List<WindowInfo> column = new List<WindowInfo>();
 
