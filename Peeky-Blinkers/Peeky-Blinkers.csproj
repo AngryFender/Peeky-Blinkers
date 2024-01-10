@@ -125,7 +125,7 @@
     <Resource Include="swap.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\error.jpg" />
+    <Resource Include="Resources\error.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

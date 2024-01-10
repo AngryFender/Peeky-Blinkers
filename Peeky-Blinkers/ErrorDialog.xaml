@@ -7,12 +7,12 @@
         mc:Ignorable="d"
         WindowStyle="None"
         WindowStartupLocation="CenterScreen"
-        Title="ErrorDialog" Height="250" Width="400">
+        Height="260" Width="400">
     <Grid>
         <Grid>
-            <Image Source="/error.jpg" Stretch="Fill"/>
-            <TextBlock Text="Peeky Blinkers already running !" Margin="96,217,114,-12"/>
-            <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="270,212,0,0" Height="25" Width="60"/>
+            <Image Source="/Resources/error.jpg" Stretch="Fill"/>
+            <TextBlock Text="Peeky Blinkers already running !" Margin="70,222,115,-17" FontSize="15" Foreground="AliceBlue"/>
+            <Button Name="BtnClose" Content="Close" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="285,220,0,0" Height="25" Width="60" Foreground="IndianRed"/>
         </Grid>
     </Grid>
 </Window>

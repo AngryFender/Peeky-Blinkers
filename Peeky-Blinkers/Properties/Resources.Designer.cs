@@ -63,9 +63,9 @@ namespace Peeky_Blinkers.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap errorImage {
+        internal static System.Drawing.Bitmap error {
             get {
-                object obj = ResourceManager.GetObject("errorImage", resourceCulture);
+                object obj = ResourceManager.GetObject("error", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
