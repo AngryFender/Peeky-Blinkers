@@ -30,8 +30,9 @@ namespace Peeky_Blinkers
 
             if (!isNewApp)
             {
-                MessageBox.Show("Peeky Blinkers already running", "Multiple Instances", MessageBoxButton.OK, MessageBoxImage.Error);
-
+                //MessageBox.Show("Peeky Blinkers already running", "Multiple Instances", MessageBoxButton.OK, MessageBoxImage.Error);
+                ErrorDialog dialog = new ErrorDialog();
+                dialog.ShowDialog();
                 this.CloseApplication();
             }
             else
