@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace Peeky_Blinkers
@@ -14,8 +15,13 @@ namespace Peeky_Blinkers
 
         internal List<WindowInfo> _windowList = new List<WindowInfo>();
         private List<WindowInfo> _rawWindowList = new List<WindowInfo>();
-        private readonly List<string> _banList = new List<string> {"HP Audio Control","Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
+        private List<WindowInfo> _selectedWindowList = new List<WindowInfo>();
+        private List<WindowInfo> _currentWindowList = new List<WindowInfo>();
+        private Dictionary<IntPtr, WindowInfo> _destWindowList = new Dictionary<IntPtr, WindowInfo>();
+        private readonly List<string> _banList = new List<string> {"Microsoft Text Input Application","HP Audio Control","Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
         private bool _forwardSequence = true;
+        private static System.Timers.Timer _timer = new System.Timers.Timer(20);
+        private int _drawCounter = 0;
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
@@ -60,7 +66,10 @@ namespace Peeky_Blinkers
              _keyboardProc = new KeyboardProc(KeyboardEventHookHandler);
             IntPtr hInstance = _winApi.LoadLibraryInvoke("User32");
             _keyboardEventHook = _winApi.SetWindowsHookExInvoke(WH_KEYBOARD_LL, _keyboardProc, hInstance,  0);
+
+            _timer.Elapsed += DrawWindow;
         }
+
 
         public List<WindowInfo> GetCurrentWindowList()
         {
@@ -286,48 +295,77 @@ namespace Peeky_Blinkers
             IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
             _winApi.GetWindowRectInvoke(cursorHWnd, out  _cursorWindow);
 
-            List<WindowInfo> selectedWindowList = new List<WindowInfo> ();
+            _selectedWindowList.Clear();
             List<IntPtr> hwndList = new List<IntPtr>();
             foreach(var window in _windowList)
             {
                 if (window.IsSelected)
                 {
                     hwndList.Add(window.HWnd);
-                    selectedWindowList.Add(window);
+                    _selectedWindowList.Add(window);
+                    _currentWindowList.Add(window);
                 }
             }
 
-            if (1 >= selectedWindowList.Count())
+            if (1 >= _selectedWindowList.Count())
             {
                 RaiseShowWindowsOverlay();
                 return false;
             }
 
+
             int safe = hwndList.Count();
-            int count = selectedWindowList.Count();
+            int count = _selectedWindowList.Count();
             for (int index = 0; index < count; ++index)
             {
                 int nextIndex = index + 1;
                 if (nextIndex < safe)
                 {
-                    selectedWindowList[index].HWnd = hwndList[nextIndex];
+                    _selectedWindowList[index].HWnd = hwndList[nextIndex];
+                    _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
                 }
                 else
                 {
-                    selectedWindowList[index].HWnd = hwndList[0] ;
+                    _selectedWindowList[index].HWnd = hwndList[0] ;
+                    _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
                 }
             }
+            _timer.Start();
 
-            foreach(var movedWindow in selectedWindowList)
-            {
-                _winApi.MoveWindowInvoke(movedWindow.HWnd
-                    , movedWindow.Left
-                    , movedWindow.Top
-                    , movedWindow.Right - movedWindow.Left
-                    , movedWindow.Bottom - movedWindow.Top
-                    , true );
-            }
             return true; 
+        }
+
+        private void DrawWindow(object sender, ElapsedEventArgs e)
+        {
+            _timer.Stop();
+            _drawCounter--;
+
+            foreach(var win in _currentWindowList)
+            {
+                if (_drawCounter <= 0)
+                {
+                    WindowInfo finalWindow = _destWindowList[win.HWnd];
+                    _winApi.MoveWindowInvoke(finalWindow.HWnd
+                        , finalWindow.Left
+                        , finalWindow.Top
+                        , finalWindow.Right - finalWindow.Left
+                        , finalWindow.Bottom - finalWindow.Top
+                        , true);
+                }
+                else
+                {
+                    _winApi.MoveWindowInvoke(win.HWnd
+                        , win.Left
+                        , win.Top
+                        , win.Right - win.Left
+                        , win.Bottom - win.Top
+                        , true);
+                }
+            }
+            if (_drawCounter > 0)
+            {
+                _timer.Start();
+            }
         }
 
         internal void SetCursor()

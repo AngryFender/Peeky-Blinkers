@@ -54,6 +54,18 @@ namespace Peeky_Blinkers
                    IsSelected == info.IsSelected;
         }
 
+        public WindowInfo Copy(WindowInfo original)
+        {
+            WindowInfo copy = new WindowInfo(original.HWnd,
+                                            original.Left,
+                                            original.Top, 
+                                            original.Right, 
+                                            original.Bottom, 
+                                            original.Title, 
+                                            original.IsSelected);
+            return copy;
+        }
+
         public override int GetHashCode()
         {
             int hashCode = 221842514;
