@@ -130,9 +130,9 @@ namespace Peeky_Blinkers
 
             if (_winMan.Swap())
             {
-                List<WindowInfo> newList = _winMan.GetCurrentWindowList();
-                WinListView.ItemsSource = newList;
-                _winMan.SetCursor();
+                //List<WindowInfo> newList = _winMan.GetCurrentWindowList();
+                //WinListView.ItemsSource = newList;
+                //_winMan.SetCursor();
             }
        }
 

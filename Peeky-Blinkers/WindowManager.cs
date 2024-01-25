@@ -20,9 +20,10 @@ namespace Peeky_Blinkers
         private Dictionary<IntPtr, WindowInfo> _destWindowList = new Dictionary<IntPtr, WindowInfo>();
         private readonly List<string> _banList = new List<string> {"Microsoft Text Input Application","HP Audio Control","Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
         private bool _forwardSequence = true;
-        private static System.Timers.Timer _timer = new System.Timers.Timer(20);
+        private static System.Timers.Timer _timer = new System.Timers.Timer(10);
         private int _drawCounter = 0;
 
+        private const int DRAWCOUNTERMAX = 4;
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
         private const int WH_KEYBOARD_LL = 13;
@@ -48,6 +49,8 @@ namespace Peeky_Blinkers
         private KeyboardProc _keyboardProc;
         private WinRect _cursorWindow;
         private EnumWindowsProc _enumWinProc;
+
+        private static bool _swapOnAction = false;
 
         public WindowManager(IWindowApi winApi)
         {
@@ -292,10 +295,16 @@ namespace Peeky_Blinkers
 
         public bool Swap()
         {
+            if (_swapOnAction)
+            {
+                return false;
+            }
+
             IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
             _winApi.GetWindowRectInvoke(cursorHWnd, out  _cursorWindow);
 
             _selectedWindowList.Clear();
+            _currentWindowList.Clear();
             List<IntPtr> hwndList = new List<IntPtr>();
             foreach(var window in _windowList)
             {
@@ -303,7 +312,7 @@ namespace Peeky_Blinkers
                 {
                     hwndList.Add(window.HWnd);
                     _selectedWindowList.Add(window);
-                    _currentWindowList.Add(window);
+                    _currentWindowList.Add( new WindowInfo(window));
                 }
             }
 
@@ -330,6 +339,8 @@ namespace Peeky_Blinkers
                     _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
                 }
             }
+            _drawCounter = DRAWCOUNTERMAX;
+            _swapOnAction = true;
             _timer.Start();
 
             return true; 
@@ -342,18 +353,20 @@ namespace Peeky_Blinkers
 
             foreach(var win in _currentWindowList)
             {
+                WindowInfo finalWindow = _destWindowList[win.HWnd];
                 if (_drawCounter <= 0)
                 {
-                    WindowInfo finalWindow = _destWindowList[win.HWnd];
                     _winApi.MoveWindowInvoke(finalWindow.HWnd
                         , finalWindow.Left
                         , finalWindow.Top
                         , finalWindow.Right - finalWindow.Left
                         , finalWindow.Bottom - finalWindow.Top
                         , true);
+                    _swapOnAction = false;
                 }
                 else
                 {
+                    win.MoveStep(finalWindow,DRAWCOUNTERMAX);
                     _winApi.MoveWindowInvoke(win.HWnd
                         , win.Left
                         , win.Top
@@ -364,6 +377,7 @@ namespace Peeky_Blinkers
             }
             if (_drawCounter > 0)
             {
+                System.Diagnostics.Debug.WriteLine("draw Counter = " +  _drawCounter.ToString());
                 _timer.Start();
             }
         }

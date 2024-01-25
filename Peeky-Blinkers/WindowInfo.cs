@@ -5,6 +5,16 @@ namespace Peeky_Blinkers
 {
     public class WindowInfo
     {
+        public WindowInfo(WindowInfo old) { 
+            HWnd = old.HWnd;
+            Left = old.Left;
+            Top = old.Top;
+            Right = old.Right;
+            Bottom = old.Bottom;
+            Title = old.Title;
+            IsSelected = old.IsSelected;
+        }
+
         public WindowInfo(IntPtr hWnd, int left, int top, int right, int bottom, string title, bool isSelected)
         {
             HWnd = hWnd;
@@ -17,10 +27,10 @@ namespace Peeky_Blinkers
         }
 
         public IntPtr HWnd { get; set; }
-        public int Left { get; } 
-        public int Top { get; }
-        public int Right { get; }
-        public int Bottom { get; }
+        public int Left { get; set; } 
+        public int Top { get; set; }
+        public int Right { get; set; }
+        public int Bottom { get; set; }
         public string Title { get; set; }
         public bool IsSelected { get; set; }
 
@@ -64,6 +74,14 @@ namespace Peeky_Blinkers
                                             original.Title, 
                                             original.IsSelected);
             return copy;
+        }
+
+        public void MoveStep(WindowInfo original, int factor)
+        {
+            Left = Left + (original.Left - Left) / factor;
+            Right = Right + (original.Right - Right) / factor;
+            Top = Top + (original.Top - Top) / factor;
+            Bottom = Bottom + (original.Bottom - Bottom) / factor;
         }
 
         public override int GetHashCode()
