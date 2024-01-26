@@ -5,13 +5,15 @@ Together with Windows Snap-layout feature it can effectively eliminate the need 
 
 # ⚽Features
 
-![swap](https://github.com/AngryFender/Peeky-Blinkers/assets/29480834/d401097f-a1e4-435c-a53b-95fa1970a7ea)
+  ![shambles2](https://github.com/AngryFender/Peeky-Blinkers/assets/29480834/ad1cc1f9-579a-494f-aaba-0199f52a630d)
 - Pressing **LEFT SHIFT + RIGHT SHIFT** Swaps the positions of the apps in the anti-clockwise direction
+___
+  ![reverse-shambles](https://github.com/AngryFender/Peeky-Blinkers/assets/29480834/aa9c0d94-a391-440d-b763-30421f2c2653)
 - Pressing **RIGHT SHIFT + LEFT SHIFT** Swaps the positions of the apps in the anti-clockwise direction
-
-![select](https://github.com/AngryFender/Peeky-Blinkers/assets/29480834/56d5ab5c-f14e-4ddf-93b2-d4ec7aa0b768)
-  
+___
+![select2](https://github.com/AngryFender/Peeky-Blinkers/assets/29480834/4fc8284f-d11f-437d-9ad2-50015b5c68c5)
 - Pressing **LEFT SHIFT + LEFT ALT + RIGHT SHIFT** Shows an overlap on top of running apps which can be mouse clicked to select for the swap
+___
 - Its lives in the System Tray menu, which can be opened to view the currently selected running apps
 - It preserves the position of the text cursor in the same position regardless of how many apps were swapped 
   
@@ -21,4 +23,4 @@ This project is meant to be simple and easy to use. Its not meant to replace **A
 
 ## ⚠️ Limitations
 
-- Only the non minimised apps can be swapped using Peeky-Blinkers
+- Only non-minimised apps can be swapped using Peeky-Blinkers
