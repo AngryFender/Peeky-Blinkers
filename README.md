@@ -9,7 +9,7 @@ Together with Windows Snap-layout feature it can effectively eliminate the need 
 - Pressing **LEFT SHIFT + RIGHT SHIFT** Swaps the positions of the apps in the anti-clockwise direction
 ___
   ![reverse-shambles](https://github.com/AngryFender/Peeky-Blinkers/assets/29480834/aa9c0d94-a391-440d-b763-30421f2c2653)
-- Pressing **RIGHT SHIFT + LEFT SHIFT** Swaps the positions of the apps in the anti-clockwise direction
+- Pressing **RIGHT SHIFT + LEFT SHIFT** Swaps the positions of the apps in the clockwise direction
 ___
 ![select2](https://github.com/AngryFender/Peeky-Blinkers/assets/29480834/4fc8284f-d11f-437d-9ad2-50015b5c68c5)
 - Pressing **LEFT SHIFT + LEFT ALT + RIGHT SHIFT** Shows an overlap on top of running apps which can be mouse clicked to select for the swap
