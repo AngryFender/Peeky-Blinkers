@@ -125,15 +125,7 @@ namespace Peeky_Blinkers
 
         private void WindowSwapHandle(object sender, EventArgs e)
         {
-            List<WindowInfo> winList = _winMan.GetCurrentWindowList();
-            WinListView.ItemsSource = winList;
-
-            if (_winMan.Swap())
-            {
-                //List<WindowInfo> newList = _winMan.GetCurrentWindowList();
-                //WinListView.ItemsSource = newList;
-                //_winMan.SetCursor();
-            }
+            _winMan.Swap();
        }
 
         private void WindowAddRemoveHandle(object sender, WindowInfoArgs e)

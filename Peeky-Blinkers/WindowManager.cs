@@ -20,10 +20,10 @@ namespace Peeky_Blinkers
         private Dictionary<IntPtr, WindowInfo> _destWindowList = new Dictionary<IntPtr, WindowInfo>();
         private readonly List<string> _banList = new List<string> {"Microsoft Text Input Application","HP Audio Control","Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
         private bool _forwardSequence = true;
-        private static System.Timers.Timer _timer = new System.Timers.Timer(10);
+        private static System.Timers.Timer _timer = new System.Timers.Timer(8);
         private int _drawCounter = 0;
 
-        private const int DRAWCOUNTERMAX = 4;
+        private const int DRAWCOUNTERMAX = 3;
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
         private const int WH_KEYBOARD_LL = 13;
@@ -31,6 +31,7 @@ namespace Peeky_Blinkers
         private bool isLeftShiftPressedDown = false;
         private bool isRightShiftPressedDown = false;
         private bool isLAltPressedDown = false;
+        private bool isDoubleShiftPressedDown = false;
         private bool isOverlayShown = false;
         private const int WM_SYSKEYDOWN = 0x0104;
         private const int WM_KEYUP = 0x0101;
@@ -50,7 +51,8 @@ namespace Peeky_Blinkers
         private WinRect _cursorWindow;
         private EnumWindowsProc _enumWinProc;
 
-        private static bool _swapOnAction = false;
+        private static bool _swapAlreadyRunning = false;
+        private static object _lock = new object();
 
         public WindowManager(IWindowApi winApi)
         {
@@ -112,10 +114,11 @@ namespace Peeky_Blinkers
                             _forwardSequence = false;
                         }
 
-                        if (isLeftShiftPressedDown && isRightShiftPressedDown && !isLAltPressedDown)
+                        if (isLeftShiftPressedDown && isRightShiftPressedDown && !isLAltPressedDown &&!isDoubleShiftPressedDown)
                         {
                             HideAllWindowOverlay();
                             RaiseSwap();
+                            isDoubleShiftPressedDown = true; 
                         }
                         else if (isLeftShiftPressedDown && isRightShiftPressedDown && isLAltPressedDown)
                         {
@@ -127,8 +130,8 @@ namespace Peeky_Blinkers
                     {
                         switch (vkCode)
                         {
-                            case VK_LSHIFT: isLeftShiftPressedDown = false; break;
-                            case VK_RSHIFT: isRightShiftPressedDown = false; break;
+                            case VK_LSHIFT: isLeftShiftPressedDown = false;  isDoubleShiftPressedDown = false; break;
+                            case VK_RSHIFT: isRightShiftPressedDown = false; isDoubleShiftPressedDown = false; break;
                             case VK_LALT: isLAltPressedDown = false; break;
                         }
                     }
@@ -295,9 +298,22 @@ namespace Peeky_Blinkers
 
         public bool Swap()
         {
-            if (_swapOnAction)
+            if (_swapAlreadyRunning)
             {
-                return false;
+                lock (_lock)
+                {
+                    foreach (var win in _currentWindowList)
+                    {
+                        WindowInfo finalWindow = _destWindowList[win.HWnd];
+                        MoveFinalWindowSetCursor(finalWindow);
+                    }
+                    _swapAlreadyRunning = false;
+                }
+            }
+            
+            if(_drawCounter == 0)
+            {
+                GetCurrentWindowList();
             }
 
             IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
@@ -322,7 +338,6 @@ namespace Peeky_Blinkers
                 return false;
             }
 
-
             int safe = hwndList.Count();
             int count = _selectedWindowList.Count();
             for (int index = 0; index < count; ++index)
@@ -340,7 +355,7 @@ namespace Peeky_Blinkers
                 }
             }
             _drawCounter = DRAWCOUNTERMAX;
-            _swapOnAction = true;
+            _swapAlreadyRunning = true;
             _timer.Start();
 
             return true; 
@@ -356,13 +371,7 @@ namespace Peeky_Blinkers
                 WindowInfo finalWindow = _destWindowList[win.HWnd];
                 if (_drawCounter <= 0)
                 {
-                    _winApi.MoveWindowInvoke(finalWindow.HWnd
-                        , finalWindow.Left
-                        , finalWindow.Top
-                        , finalWindow.Right - finalWindow.Left
-                        , finalWindow.Bottom - finalWindow.Top
-                        , true);
-                    _swapOnAction = false;
+                    MoveFinalWindowSetCursor(finalWindow);
                 }
                 else
                 {
@@ -375,33 +384,42 @@ namespace Peeky_Blinkers
                         , true);
                 }
             }
+
             if (_drawCounter > 0)
             {
-                System.Diagnostics.Debug.WriteLine("draw Counter = " +  _drawCounter.ToString());
                 _timer.Start();
+            }
+            else
+            {
+                _swapAlreadyRunning = false;
             }
         }
 
-        internal void SetCursor()
+        private void MoveFinalWindowSetCursor(WindowInfo finalWindow)
         {
-            foreach(var window in _windowList)
+            _winApi.MoveWindowInvoke(finalWindow.HWnd
+                , finalWindow.Left
+                , finalWindow.Top
+                , finalWindow.Right - finalWindow.Left
+                , finalWindow.Bottom - finalWindow.Top
+                , true);
+
+            if (_cursorWindow.left == finalWindow.Left &&
+               _cursorWindow.top == finalWindow.Top &&
+               _cursorWindow.right == finalWindow.Right &&
+               _cursorWindow.bottom == finalWindow.Bottom)
             {
-                if(_cursorWindow.left == window.Left &&
-                   _cursorWindow.top == window.Top &&
-                   _cursorWindow.right == window.Right &&
-                   _cursorWindow.bottom == window.Bottom)
-                {
-                    // Simulate Alt key press to bypass restrictions on SetForegroundWindow
-                    _winApi.keybd_eventInvoke(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY, UIntPtr.Zero);
+                // Simulate Alt key press to bypass restrictions on SetForegroundWindow
+                _winApi.keybd_eventInvoke(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY, UIntPtr.Zero);
 
-                    _winApi.SetForegroundWindowInvoke(window.HWnd);
+                _winApi.SetForegroundWindowInvoke(finalWindow.HWnd);
 
-                    // Simulate Alt key release
-                    _winApi.keybd_eventInvoke(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, UIntPtr.Zero);
-                }
+                // Simulate Alt key release
+                _winApi.keybd_eventInvoke(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, UIntPtr.Zero);
             }
         }
     }
+
 
     public class WindowInfoArgs : EventArgs
     {
