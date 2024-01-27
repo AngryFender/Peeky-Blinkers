@@ -22,7 +22,7 @@ namespace Peeky_Blinkers
         private bool _forwardSequence = true;
         private static System.Timers.Timer _timer = new System.Timers.Timer(8);
         private int _drawCounter = 0;
-        private int _drawMaxCounter = 3;
+        private int _drawMaxCounter = 0;
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
@@ -308,7 +308,7 @@ namespace Peeky_Blinkers
                 }
             }
             
-            if(_drawCounter == 0)
+            if(_drawCounter <= 0)
             {
                 GetCurrentWindowList();
             }

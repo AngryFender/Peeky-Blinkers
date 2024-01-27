@@ -59,8 +59,7 @@ namespace Peeky_Blinkers
                 _winMan.ShowWindowsOverlay += ShowWindowsOverlayHandle;
                 _winMan.HideWindowOverlay += HideWindowsOverlayHandle;
 
-                bool animation_enabled = _configManager.GetAnimationState();
-                CheckBox_animation.IsChecked = animation_enabled;
+                CheckBox_animation.IsChecked = _configManager.GetAnimationState();
                 CheckAnimationState();
 
                 CheckBox_animation.Checked += CheckBox_animation_handler;
