@@ -10,9 +10,6 @@ namespace Peeky_Blinkers
 {
     internal class Win : IWindowApi
     {
-        private static Win _singleWin;
-        private static Object _object = new Object();
-
         [DllImport("user32.dll")]
         static extern bool EnumDesktopWindows(IntPtr hDesktop, EnumWindowsProc eumWinProc, IntPtr lParam);
 

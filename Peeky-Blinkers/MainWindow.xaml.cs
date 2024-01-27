@@ -18,6 +18,7 @@ namespace Peeky_Blinkers
     {
         private NotifyIcon _notifyIcon;
         private readonly WindowManager _winMan = new WindowManager(new Win());
+        private readonly ConfigManager _configManager = new ConfigManager(new WindowRegistry());
         private bool _exitRequested = false;
         private bool _initialNotification = true;
         private readonly Mutex _mutex;
@@ -57,7 +58,19 @@ namespace Peeky_Blinkers
                 _winMan.WindowAddRemoveHandler += WindowAddRemoveHandle;
                 _winMan.ShowWindowsOverlay += ShowWindowsOverlayHandle;
                 _winMan.HideWindowOverlay += HideWindowsOverlayHandle;
+
+                bool animation_enabled = _configManager.GetAnimationState();
+                CheckBox_animation.IsChecked = animation_enabled;
+                CheckAnimationState();
+
+                CheckBox_animation.Checked += CheckBox_animation_handler;
+                CheckBox_animation.Unchecked += CheckBox_animation_handler;
             }
+        }
+
+        private void CheckBox_animation_handler(object sender, RoutedEventArgs e)
+        {
+            CheckAnimationState();
         }
 
         private void HideWindowsOverlayHandle(object sender, EventArgs e)
@@ -134,6 +147,21 @@ namespace Peeky_Blinkers
                 e.Cancel = true;
                 HideWindow();
             }
+        }
+
+        private void CheckAnimationState()
+        {
+            if (CheckBox_animation.IsChecked == true)
+            {
+                _configManager.SetAnimationState(true);
+                _winMan.setDrawMaxCounter(3);
+            }
+            else
+            {
+                _configManager.SetAnimationState(false);
+                _winMan.setDrawMaxCounter(0);
+            }
+
         }
 
         private void ShowMainWindow()

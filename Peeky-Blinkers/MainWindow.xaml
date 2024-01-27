@@ -8,7 +8,12 @@
         Title="Peeky Blinkers" Height="250" Width="400"
         Topmost="True">
     <Grid>
-        <ListView Name="WinListView"  ScrollViewer.HorizontalScrollBarVisibility="Hidden" >
+        <Grid.RowDefinitions>
+        <RowDefinition Height="*" /> <!-- Row for ListView -->
+        <RowDefinition Height="Auto" /> <!-- Row for CheckBoxes -->
+        </Grid.RowDefinitions>
+
+        <ListView Grid.Row="0" Name="WinListView"  ScrollViewer.HorizontalScrollBarVisibility="Hidden" >
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Select" Width="40">
@@ -63,5 +68,9 @@
                 </GridView>
             </ListView.View>
         </ListView>
+
+        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="20">
+            <CheckBox x:Name="CheckBox_animation" Content="Animation Enabled" />
+        </StackPanel>
     </Grid>
 </Window>

@@ -22,8 +22,8 @@ namespace Peeky_Blinkers
         private bool _forwardSequence = true;
         private static System.Timers.Timer _timer = new System.Timers.Timer(8);
         private int _drawCounter = 0;
+        private int _drawMaxCounter = 3;
 
-        private const int DRAWCOUNTERMAX = 3;
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
         private const int WH_KEYBOARD_LL = 13;
@@ -75,6 +75,10 @@ namespace Peeky_Blinkers
             _timer.Elapsed += DrawWindow;
         }
 
+        public void setDrawMaxCounter(int value)
+        {
+            _drawMaxCounter = value;
+        }
 
         public List<WindowInfo> GetCurrentWindowList()
         {
@@ -347,7 +351,7 @@ namespace Peeky_Blinkers
                     _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
                 }
             }
-            _drawCounter = DRAWCOUNTERMAX;
+            _drawCounter = _drawMaxCounter;
             _swapAlreadyRunning = true;
             _timer.Start();
 
@@ -368,7 +372,7 @@ namespace Peeky_Blinkers
                 }
                 else
                 {
-                    win.MoveStep(finalWindow,DRAWCOUNTERMAX);
+                    win.MoveStep(finalWindow,_drawMaxCounter);
                     _winApi.MoveWindowInvoke(win.HWnd
                         , win.Left
                         , win.Top
