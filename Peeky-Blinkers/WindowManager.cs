@@ -117,7 +117,7 @@ namespace Peeky_Blinkers
                         if (isLeftShiftPressedDown && isRightShiftPressedDown && !isLAltPressedDown &&!isDoubleShiftPressedDown)
                         {
                             HideAllWindowOverlay();
-                            RaiseSwap();
+                            Swap();
                             isDoubleShiftPressedDown = true; 
                         }
                         else if (isLeftShiftPressedDown && isRightShiftPressedDown && isLAltPressedDown)
@@ -145,13 +145,6 @@ namespace Peeky_Blinkers
                 }
             }
             return _winApi.CallNextHookExInvoke(_keyboardEventHook, nCode, wParam, lParam);
-        }
-
-        public event EventHandler SwapHandler;
-
-        private void RaiseSwap()
-        {
-            SwapHandler?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler ShowWindowsOverlay;

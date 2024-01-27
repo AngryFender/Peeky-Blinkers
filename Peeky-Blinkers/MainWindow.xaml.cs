@@ -30,7 +30,6 @@ namespace Peeky_Blinkers
 
             if (!isNewApp)
             {
-                //MessageBox.Show("Peeky Blinkers already running", "Multiple Instances", MessageBoxButton.OK, MessageBoxImage.Error);
                 ErrorDialog dialog = new ErrorDialog();
                 dialog.ShowDialog();
                 this.CloseApplication();
@@ -56,7 +55,6 @@ namespace Peeky_Blinkers
                 _notifyIcon.ContextMenu = trayMenu;
 
                 _winMan.WindowAddRemoveHandler += WindowAddRemoveHandle;
-                _winMan.SwapHandler += WindowSwapHandle;
                 _winMan.ShowWindowsOverlay += ShowWindowsOverlayHandle;
                 _winMan.HideWindowOverlay += HideWindowsOverlayHandle;
             }
@@ -122,11 +120,6 @@ namespace Peeky_Blinkers
             _exitRequested = true;
             Application.Current.Shutdown();
         }
-
-        private void WindowSwapHandle(object sender, EventArgs e)
-        {
-            _winMan.Swap();
-       }
 
         private void WindowAddRemoveHandle(object sender, WindowInfoArgs e)
         {
