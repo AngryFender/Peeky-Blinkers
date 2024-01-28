@@ -310,7 +310,7 @@ namespace Peeky_Blinkers
             
             if(_drawCounter <= 0)
             {
-                GetCurrentWindowList();
+                RaiseWindowInfoChanged(GetCurrentWindowList());
             }
 
             IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
@@ -389,6 +389,7 @@ namespace Peeky_Blinkers
             else
             {
                 _swapAlreadyRunning = false;
+                RaiseWindowInfoChanged(GetCurrentWindowList());
             }
         }
 

@@ -135,8 +135,11 @@ namespace Peeky_Blinkers
 
         private void WindowAddRemoveHandle(object sender, WindowInfoArgs e)
         {
-            WinListView.ItemsSource = e.GetList();
-            WinListView.Items.Refresh();
+            Dispatcher.Invoke(() =>
+            {
+                WinListView.ItemsSource = e.GetList();
+                WinListView.Items.Refresh();
+            });
         }
 
         private void MainWindowClosing(object sender, CancelEventArgs e)
@@ -160,7 +163,6 @@ namespace Peeky_Blinkers
                 _configManager.SetAnimationState(false);
                 _winMan.setDrawMaxCounter(0);
             }
-
         }
 
         private void ShowMainWindow()
