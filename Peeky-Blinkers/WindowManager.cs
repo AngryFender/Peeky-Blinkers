@@ -389,7 +389,6 @@ namespace Peeky_Blinkers
             else
             {
                 _swapAlreadyRunning = false;
-                RaiseWindowInfoChanged(GetCurrentWindowList());
             }
         }
 
