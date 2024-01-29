@@ -22,8 +22,19 @@ namespace Peeky_Blinkers
             {
                 return false;
             }
-            string result = (string)obj;
-            return bool.Parse(result);
+
+            if(obj is bool result)
+            {
+                return result;
+            } 
+            else if (obj is string resultStr)
+            {
+                return bool.Parse(resultStr);
+            }
+            else
+            {
+                return false;
+            }
         }
 
         internal void SetAnimationState(bool value)
