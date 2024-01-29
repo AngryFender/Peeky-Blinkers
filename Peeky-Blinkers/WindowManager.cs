@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
-using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace Peeky_Blinkers
 {
@@ -18,6 +18,7 @@ namespace Peeky_Blinkers
         private List<WindowInfo> _selectedWindowList = new List<WindowInfo>();
         private List<WindowInfo> _currentWindowList = new List<WindowInfo>();
         private Dictionary<IntPtr, WindowInfo> _destWindowList = new Dictionary<IntPtr, WindowInfo>();
+
         private readonly List<string> _banList = new List<string> {"Microsoft Text Input Application","HP Audio Control","Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
         private bool _forwardSequence = true;
         private static System.Timers.Timer _timer = new System.Timers.Timer(8);
@@ -25,6 +26,8 @@ namespace Peeky_Blinkers
         private int _drawMaxCounter = 0;
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
+        private const uint EVENT_SYSTEM_MINIMIZEEND= 0X0017;
+        private const uint EVENT_SYSTEM_MINIMIZESTART= 0X0016;
         private const uint WINEVENT_OUTOFCONTEXT = 0;
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x0100;
@@ -45,6 +48,7 @@ namespace Peeky_Blinkers
         private const int SCREEN_SECTIONS = 8;
 
         private IntPtr _winEventHook;
+        private IntPtr _winEventHook2;
         private IntPtr _keyboardEventHook;
         private WinEventProc _winEventProc;
         private KeyboardProc _keyboardProc;
@@ -52,7 +56,6 @@ namespace Peeky_Blinkers
         private EnumWindowsProc _enumWinProc;
 
         private static bool _swapAlreadyRunning = false;
-        private static object _lock = new object();
 
         public WindowManager(IWindowApi winApi)
         {
@@ -61,14 +64,22 @@ namespace Peeky_Blinkers
             _enumWinProc = new EnumWindowsProc(EnumWindowsCallBack);
 
             _winEventProc = new WinEventProc(WinEventHookHandler);
-            _winEventHook = _winApi.SetWinEventHookInvoke(EVENT_SYSTEM_FOREGROUND
-                                            , EVENT_SYSTEM_FOREGROUND
+            _winEventHook = _winApi.SetWinEventHookInvoke(EVENT_SYSTEM_MINIMIZESTART
+                                            ,EVENT_SYSTEM_MINIMIZEEND 
                                             , IntPtr.Zero
                                             , _winEventProc
                                             , 0
                                             , 0
                                             , WINEVENT_OUTOFCONTEXT);
-             _keyboardProc = new KeyboardProc(KeyboardEventHookHandler);
+            _winEventHook2 = _winApi.SetWinEventHookInvoke(EVENT_SYSTEM_FOREGROUND
+                                            ,EVENT_SYSTEM_FOREGROUND 
+                                            , IntPtr.Zero
+                                            , _winEventProc
+                                            , 0
+                                            , 0
+                                            , WINEVENT_OUTOFCONTEXT);
+ 
+            _keyboardProc = new KeyboardProc(KeyboardEventHookHandler);
             IntPtr hInstance = _winApi.LoadLibraryInvoke("User32");
             _keyboardEventHook = _winApi.SetWindowsHookExInvoke(WH_KEYBOARD_LL, _keyboardProc, hInstance,  0);
 
@@ -295,9 +306,7 @@ namespace Peeky_Blinkers
 
         public bool Swap()
         {
-            if (_swapAlreadyRunning)
-            {
-                lock (_lock)
+                if (_swapAlreadyRunning)
                 {
                     foreach (var win in _currentWindowList)
                     {
@@ -305,57 +314,58 @@ namespace Peeky_Blinkers
                         MoveFinalWindowSetCursor(finalWindow);
                     }
                     _swapAlreadyRunning = false;
+                    _timer.Stop();
+                    _drawCounter = 0;
                 }
-            }
-            
-            if(_drawCounter <= 0)
-            {
-                RaiseWindowInfoChanged(GetCurrentWindowList());
-            }
 
-            IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
-            _winApi.GetWindowRectInvoke(cursorHWnd, out  _cursorWindow);
-
-            _selectedWindowList.Clear();
-            _currentWindowList.Clear();
-            List<IntPtr> hwndList = new List<IntPtr>();
-            foreach(var window in _windowList)
-            {
-                if (window.IsSelected)
+                if (_drawCounter <= 0)
                 {
-                    hwndList.Add(window.HWnd);
-                    _selectedWindowList.Add(window);
-                    _currentWindowList.Add( new WindowInfo(window));
+                    RaiseWindowInfoChanged(GetCurrentWindowList());
                 }
-            }
 
-            if (1 >= _selectedWindowList.Count())
-            {
-                RaiseShowWindowsOverlay();
-                return false;
-            }
+                IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
+                _winApi.GetWindowRectInvoke(cursorHWnd, out _cursorWindow);
 
-            int safe = hwndList.Count();
-            int count = _selectedWindowList.Count();
-            for (int index = 0; index < count; ++index)
-            {
-                int nextIndex = index + 1;
-                if (nextIndex < safe)
+                _selectedWindowList.Clear();
+                _currentWindowList.Clear();
+                List<IntPtr> hwndList = new List<IntPtr>();
+                foreach (var window in _windowList)
                 {
-                    _selectedWindowList[index].HWnd = hwndList[nextIndex];
-                    _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
+                    if (window.IsSelected)
+                    {
+                        hwndList.Add(window.HWnd);
+                        _selectedWindowList.Add(window);
+                        _currentWindowList.Add(new WindowInfo(window));
+                    }
                 }
-                else
-                {
-                    _selectedWindowList[index].HWnd = hwndList[0] ;
-                    _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
-                }
-            }
-            _drawCounter = _drawMaxCounter;
-            _swapAlreadyRunning = true;
-            _timer.Start();
 
-            return true; 
+                if (1 >= _selectedWindowList.Count())
+                {
+                    RaiseShowWindowsOverlay();
+                    return false;
+                }
+
+                int safe = hwndList.Count();
+                int count = _selectedWindowList.Count();
+                for (int index = 0; index < count; ++index)
+                {
+                    int nextIndex = index + 1;
+                    if (nextIndex < safe)
+                    {
+                        _selectedWindowList[index].HWnd = hwndList[nextIndex];
+                        _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
+                    }
+                    else
+                    {
+                        _selectedWindowList[index].HWnd = hwndList[0];
+                        _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
+                    }
+                }
+                _drawCounter = _drawMaxCounter;
+                _swapAlreadyRunning = true;
+                _timer.Start();
+
+                return true;
         }
 
         private void DrawWindow(object sender, ElapsedEventArgs e)
@@ -363,7 +373,8 @@ namespace Peeky_Blinkers
             _timer.Stop();
             _drawCounter--;
 
-            foreach(var win in _currentWindowList)
+            List<WindowInfo> windowList = new List<WindowInfo>(_currentWindowList);
+            foreach(var win in windowList)
             {
                 WindowInfo finalWindow = _destWindowList[win.HWnd];
                 if (_drawCounter <= 0)
@@ -372,7 +383,7 @@ namespace Peeky_Blinkers
                 }
                 else
                 {
-                    win.MoveStep(finalWindow,_drawMaxCounter);
+                    win.MoveStep(finalWindow, _drawMaxCounter);
                     _winApi.MoveWindowInvoke(win.HWnd
                         , win.Left
                         , win.Top

@@ -7,7 +7,7 @@ using System.ComponentModel;
 using ContextMenu = System.Windows.Forms.ContextMenu;
 using static Peeky_Blinkers.Overlay;
 using System.Threading;
-using MessageBox = System.Windows.MessageBox;
+using System.Collections.ObjectModel;
 
 namespace Peeky_Blinkers
 {
@@ -23,6 +23,8 @@ namespace Peeky_Blinkers
         private bool _initialNotification = true;
         private readonly Mutex _mutex;
         private List<Overlay> _overlaysList = new List<Overlay>();
+
+        private ObservableCollection<WindowInfo> _windowInfos = new ObservableCollection<WindowInfo>();
 
         public MainWindow()
         {
@@ -85,7 +87,12 @@ namespace Peeky_Blinkers
         private void ShowWindowsOverlayHandle(object sender, EventArgs e)
         {
             List<WindowInfo> winList = _winMan.GetCurrentWindowList();
-            WinListView.ItemsSource = winList;
+            _windowInfos.Clear();
+            foreach(WindowInfo win in winList)
+            {
+                _windowInfos.Add(win);
+            }
+            WinListView.ItemsSource = _windowInfos;
 
             foreach(WindowInfo win in winList)
             {
@@ -107,16 +114,18 @@ namespace Peeky_Blinkers
         private void OverlayUpdatedHandler(object sender, OverlayEventArgs e)
         {
             List<WindowInfo> winList = _winMan.GetCurrentWindowList();
-            
+            _windowInfos.Clear();
             foreach(WindowInfo win in winList)
             {
                 if(win.HWnd == e.HWnd)
                 {
                     win.IsSelected = e.IsSelected;
                 }
+                _windowInfos.Add(win);
             }
 
-            WinListView.ItemsSource = winList;
+
+            WinListView.ItemsSource =_windowInfos;
         }
 
         private void MainWindowStateChanged(object sender, EventArgs e)
@@ -137,7 +146,13 @@ namespace Peeky_Blinkers
         {
             Dispatcher.Invoke(() =>
             {
-                WinListView.ItemsSource = e.GetList();
+                var winlist  = e.GetList();
+                _windowInfos.Clear();
+                foreach(WindowInfo win in winlist)
+                {
+                    _windowInfos.Add(win);
+                }
+                WinListView.ItemsSource = _windowInfos;
                 WinListView.Items.Refresh();
             });
         }
