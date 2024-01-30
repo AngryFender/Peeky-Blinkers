@@ -56,6 +56,7 @@ namespace Peeky_Blinkers
         private EnumWindowsProc _enumWinProc;
 
         private static bool _swapAlreadyRunning = false;
+        private static readonly object _lockObj = new object(); 
 
         public WindowManager(IWindowApi winApi)
         {
@@ -307,15 +308,18 @@ namespace Peeky_Blinkers
 
         public bool Swap()
         {
+            lock (_lockObj)
+            {
+
                 if (_swapAlreadyRunning)
                 {
+                    _timer.Stop();
                     foreach (var win in _currentWindowList)
                     {
                         WindowInfo finalWindow = _destWindowList[win.HWnd];
                         MoveFinalWindowSetCursor(finalWindow);
                     }
                     _swapAlreadyRunning = false;
-                    _timer.Stop();
                     _drawCounter = 0;
                 }
 
@@ -367,40 +371,44 @@ namespace Peeky_Blinkers
                 _timer.Start();
 
                 return true;
+            }
         }
 
         private void DrawWindow(object sender, ElapsedEventArgs e)
         {
             _timer.Stop();
-            _drawCounter--;
-
-            List<WindowInfo> windowList = new List<WindowInfo>(_currentWindowList);
-            foreach(var win in windowList)
+            lock (_lockObj)
             {
-                WindowInfo finalWindow = _destWindowList[win.HWnd];
-                if (_drawCounter <= 0)
+                _drawCounter--;
+
+                List<WindowInfo> windowList = new List<WindowInfo>(_currentWindowList);
+                foreach(var win in windowList)
                 {
-                    MoveFinalWindowSetCursor(finalWindow);
+                    WindowInfo finalWindow = _destWindowList[win.HWnd];
+                    if (_drawCounter <= 0)
+                    {
+                        MoveFinalWindowSetCursor(finalWindow);
+                    }
+                    else
+                    {
+                        win.MoveStep(finalWindow, _drawMaxCounter);
+                        _winApi.MoveWindowInvoke(win.HWnd
+                            , win.Left
+                            , win.Top
+                            , win.Right - win.Left
+                            , win.Bottom - win.Top
+                            , true);
+                    }
+                }
+
+                if (_drawCounter > 0)
+                {
+                    _timer.Start();
                 }
                 else
                 {
-                    win.MoveStep(finalWindow, _drawMaxCounter);
-                    _winApi.MoveWindowInvoke(win.HWnd
-                        , win.Left
-                        , win.Top
-                        , win.Right - win.Left
-                        , win.Bottom - win.Top
-                        , true);
+                    _swapAlreadyRunning = false;
                 }
-            }
-
-            if (_drawCounter > 0)
-            {
-                _timer.Start();
-            }
-            else
-            {
-                _swapAlreadyRunning = false;
             }
         }
 
