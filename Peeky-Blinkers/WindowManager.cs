@@ -301,6 +301,7 @@ namespace Peeky_Blinkers
         public void Dispose()
         {
             _winApi.UnhookWinEventInvoke(_winEventHook);
+            _winApi.UnhookWinEventInvoke(_winEventHook2);
             _winApi.UnhookWindowsHookExInvoke(_keyboardEventHook);
         }
 
