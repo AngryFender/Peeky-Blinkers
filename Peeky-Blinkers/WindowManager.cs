@@ -306,77 +306,88 @@ namespace Peeky_Blinkers
             _winApi.UnhookWindowsHookExInvoke(_keyboardEventHook);
         }
 
-        public bool Swap()
+        public async Task Swap()
         {
+            _timer.Stop();
+            List<Action> actionList = new List<Action>();
             lock (_lockObj)
             {
-
                 if (_swapAlreadyRunning)
                 {
-                    _timer.Stop();
                     foreach (var win in _currentWindowList)
                     {
                         WindowInfo finalWindow = _destWindowList[win.HWnd];
-                        MoveFinalWindowSetCursor(finalWindow);
+                        actionList.Add(()=> MoveFinalWindowSetCursor(finalWindow));
                     }
                     _swapAlreadyRunning = false;
                     _drawCounter = 0;
                 }
-
-                if (_drawCounter <= 0)
-                {
-                    RaiseWindowInfoChanged(GetCurrentWindowList());
-                }
-
-                IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
-                _winApi.GetWindowRectInvoke(cursorHWnd, out _cursorWindow);
-
-                _selectedWindowList.Clear();
-                _currentWindowList.Clear();
-                List<IntPtr> hwndList = new List<IntPtr>();
-                foreach (var window in _windowList)
-                {
-                    if (window.IsSelected)
-                    {
-                        hwndList.Add(window.HWnd);
-                        _selectedWindowList.Add(window);
-                        _currentWindowList.Add(new WindowInfo(window));
-                    }
-                }
-
-                if (1 >= _selectedWindowList.Count())
-                {
-                    RaiseShowWindowsOverlay();
-                    return false;
-                }
-
-                int safe = hwndList.Count();
-                int count = _selectedWindowList.Count();
-                for (int index = 0; index < count; ++index)
-                {
-                    int nextIndex = index + 1;
-                    if (nextIndex < safe)
-                    {
-                        _selectedWindowList[index].HWnd = hwndList[nextIndex];
-                        _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
-                    }
-                    else
-                    {
-                        _selectedWindowList[index].HWnd = hwndList[0];
-                        _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
-                    }
-                }
-                _drawCounter = _drawMaxCounter;
-                _swapAlreadyRunning = true;
-                _timer.Start();
-
-                return true;
             }
+
+            List<Task> taskList = new List<Task>();
+            foreach(Action action in actionList)
+            {
+                Task task = new Task(action);
+                taskList.Add(task);
+                task.Start();
+            }
+            await Task.WhenAll(taskList);
+
+            if (_drawCounter <= 0)
+            {
+                RaiseWindowInfoChanged(GetCurrentWindowList());
+            }
+
+            IntPtr cursorHWnd = _winApi.GetForegroundWindowInvoke();
+            _winApi.GetWindowRectInvoke(cursorHWnd, out _cursorWindow);
+
+            _selectedWindowList.Clear();
+            _currentWindowList.Clear();
+            List<IntPtr> hwndList = new List<IntPtr>();
+            foreach (var window in _windowList)
+            {
+                if (window.IsSelected)
+                {
+                    hwndList.Add(window.HWnd);
+                    _selectedWindowList.Add(window);
+                    _currentWindowList.Add(new WindowInfo(window));
+                }
+            }
+
+            if (1 >= _selectedWindowList.Count())
+            {
+                RaiseShowWindowsOverlay();
+                return;
+            }
+
+            int safe = hwndList.Count();
+            int count = _selectedWindowList.Count();
+            for (int index = 0; index < count; ++index)
+            {
+                int nextIndex = index + 1;
+                if (nextIndex < safe)
+                {
+                    _selectedWindowList[index].HWnd = hwndList[nextIndex];
+                    _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
+                }
+                else
+                {
+                    _selectedWindowList[index].HWnd = hwndList[0];
+                    _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
+                }
+            }
+            _drawCounter = _drawMaxCounter;
+            _swapAlreadyRunning = true;
+            _timer.Start();
+
+            return;
         }
 
-        private void DrawWindow(object sender, ElapsedEventArgs e)
+        private async void DrawWindow(object sender, ElapsedEventArgs e)
         {
             _timer.Stop();
+            List<Action> actionList = new List<Action>();
+
             lock (_lockObj)
             {
                 _drawCounter--;
@@ -384,31 +395,44 @@ namespace Peeky_Blinkers
                 List<WindowInfo> windowList = new List<WindowInfo>(_currentWindowList);
                 foreach(var win in windowList)
                 {
-                    WindowInfo finalWindow = _destWindowList[win.HWnd];
-                    if (_drawCounter <= 0)
-                    {
-                        MoveFinalWindowSetCursor(finalWindow);
-                    }
-                    else
-                    {
-                        win.MoveStep(finalWindow, _drawMaxCounter);
-                        _winApi.MoveWindowInvoke(win.HWnd
-                            , win.Left
-                            , win.Top
-                            , win.Right - win.Left
-                            , win.Bottom - win.Top
-                            , true);
-                    }
+                    actionList.Add(() => 
+                    { 
+                        WindowInfo finalWindow = _destWindowList[win.HWnd];
+                        if (_drawCounter <= 0)
+                        {
+                            MoveFinalWindowSetCursor(finalWindow);
+                        }
+                        else
+                        {
+                            win.MoveStep(finalWindow, _drawMaxCounter);
+                            _winApi.MoveWindowInvoke(win.HWnd
+                                , win.Left
+                                , win.Top
+                                , win.Right - win.Left
+                                , win.Bottom - win.Top
+                                , true);
+                        }
+                    });
                 }
+            }
 
-                if (_drawCounter > 0)
-                {
-                    _timer.Start();
-                }
-                else
-                {
-                    _swapAlreadyRunning = false;
-                }
+            List<Task> taskList = new List<Task>();
+            foreach(Action action in actionList)
+            {
+                Task task = new Task(action);
+                taskList.Add(task);
+                task.Start();
+            }
+
+            await Task.WhenAll(taskList);
+
+            if (_drawCounter > 0)
+            {
+                _timer.Start();
+            }
+            else
+            {
+                _swapAlreadyRunning = false;
             }
         }
 
