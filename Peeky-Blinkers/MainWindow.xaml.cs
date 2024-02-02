@@ -66,7 +66,14 @@ namespace Peeky_Blinkers
 
                 CheckBox_animation.Checked += CheckBox_animation_handler;
                 CheckBox_animation.Unchecked += CheckBox_animation_handler;
+
+                Slider_animation.ValueChanged += Slider_animation_ValueChanged;
             }
+        }
+
+        private void Slider_animation_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            _winMan.setDrawMaxCounter((int)e.NewValue);
         }
 
         private void CheckBox_animation_handler(object sender, RoutedEventArgs e)
@@ -171,7 +178,7 @@ namespace Peeky_Blinkers
             if (CheckBox_animation.IsChecked == true)
             {
                 _configManager.SetAnimationState(true);
-                _winMan.setDrawMaxCounter(3);
+                _winMan.setDrawMaxCounter((int)Slider_animation.Value);
             }
             else
             {

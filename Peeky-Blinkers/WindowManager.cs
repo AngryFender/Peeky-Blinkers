@@ -21,7 +21,7 @@ namespace Peeky_Blinkers
 
         private readonly List<string> _banList = new List<string> {"Microsoft Text Input Application","HP Audio Control","Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
         private bool _forwardSequence = true;
-        private static System.Timers.Timer _timer = new System.Timers.Timer(8);
+        private static System.Timers.Timer _timer = new System.Timers.Timer(4);
         private int _drawCounter = 0;
         private int _drawMaxCounter = 0;
 

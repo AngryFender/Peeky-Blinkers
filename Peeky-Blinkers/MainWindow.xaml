@@ -71,6 +71,22 @@
 
         <StackPanel Grid.Row="1" Orientation="Vertical" Margin="20">
             <CheckBox x:Name="CheckBox_animation" Content="Animation Enabled" />
+            
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="Performant"/>
+                <Slider x:Name="Slider_animation" Grid.Column="1"  Margin="10" Orientation="Horizontal"  
+                    IsSnapToTickEnabled="True" Minimum="3" Maximum="11" TickPlacement="TopLeft" 
+                    AutoToolTipPlacement="BottomRight" AutoToolTipPrecision="2" 
+                    Ticks="3,5,7,9,11"/>
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="Smooth"/>
+            </Grid>
+
         </StackPanel>
     </Grid>
 </Window>
