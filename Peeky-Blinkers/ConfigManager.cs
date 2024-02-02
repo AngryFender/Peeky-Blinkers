@@ -37,9 +37,37 @@ namespace Peeky_Blinkers
             }
         }
 
+        internal int GetAnimationFrameCount()
+        {
+            object defaultValue = 3;
+            object obj = _registry.GetValue("animation_frame_count", defaultValue);
+            if(obj == null)
+            {
+                return 3;
+            }
+
+            if (obj is int result)
+            {
+                return result;
+            }
+            else if (obj is string resultStr)
+            {
+                return int.Parse(resultStr);
+            }
+            else
+            {
+                return 3;
+            }
+        }
+
         internal void SetAnimationState(bool value)
         {
             _registry.SetValue("animation_enabled", value);
+        }
+
+        internal void setAnimationFrameCount(int frameCount) 
+        {
+            _registry.SetValue("animation_frame_count", frameCount);
         }
     }
 }

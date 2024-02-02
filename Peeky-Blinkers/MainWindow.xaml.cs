@@ -62,22 +62,23 @@ namespace Peeky_Blinkers
                 _winMan.HideWindowOverlay += HideWindowsOverlayHandle;
 
                 CheckBox_animation.IsChecked = _configManager.GetAnimationState();
+                Slider_animation.Value = _configManager.GetAnimationFrameCount();
                 CheckAnimationState();
-
                 CheckBox_animation.Checked += CheckBox_animation_handler;
                 CheckBox_animation.Unchecked += CheckBox_animation_handler;
-
                 Slider_animation.ValueChanged += Slider_animation_ValueChanged;
             }
         }
 
         private void Slider_animation_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            _winMan.setDrawMaxCounter((int)e.NewValue);
+            _configManager.setAnimationFrameCount((int)e.NewValue);
+            CheckAnimationState();
         }
 
         private void CheckBox_animation_handler(object sender, RoutedEventArgs e)
         {
+            _configManager.SetAnimationState(CheckBox_animation.IsChecked.GetValueOrDefault());
             CheckAnimationState();
         }
 
@@ -175,16 +176,8 @@ namespace Peeky_Blinkers
 
         private void CheckAnimationState()
         {
-            if (CheckBox_animation.IsChecked == true)
-            {
-                _configManager.SetAnimationState(true);
-                _winMan.setDrawMaxCounter((int)Slider_animation.Value);
-            }
-            else
-            {
-                _configManager.SetAnimationState(false);
-                _winMan.setDrawMaxCounter(0);
-            }
+            _winMan.setAnimationState(CheckBox_animation.IsChecked.GetValueOrDefault());
+            _winMan.setAnimationFrameCount((int)Slider_animation.Value);
         }
 
         private void ShowMainWindow()

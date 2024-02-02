@@ -22,8 +22,9 @@ namespace Peeky_Blinkers
         private readonly List<string> _banList = new List<string> {"Microsoft Text Input Application","HP Audio Control","Settings", "Peeky Blinkers", "NVIDIA GeForce Overlay", "Windows Input Experience", "Program Manager", "Peeky Blinkers Overlay"};
         private bool _forwardSequence = true;
         private static System.Timers.Timer _timer = new System.Timers.Timer(4);
-        private int _drawCounter = 0;
-        private int _drawMaxCounter = 0;
+        private bool _animationEnabled = false;
+        private int _animationFrameCountDown = 0;
+        private int _animationFrameMaxCount = 0;
 
         private const uint EVENT_SYSTEM_FOREGROUND = 3;
         private const uint EVENT_SYSTEM_MINIMIZEEND= 0X0017;
@@ -87,9 +88,14 @@ namespace Peeky_Blinkers
             _timer.Elapsed += DrawWindow;
         }
 
-        public void setDrawMaxCounter(int value)
+        public void setAnimationState(bool enable)
         {
-            _drawMaxCounter = value;
+            _animationEnabled = enable;
+        }
+
+        public void setAnimationFrameCount(int value)
+        {
+            _animationFrameMaxCount = value;
         }
 
         public List<WindowInfo> GetCurrentWindowList()
@@ -320,7 +326,7 @@ namespace Peeky_Blinkers
                         actionList.Add(()=> MoveFinalWindowSetCursor(finalWindow));
                     }
                     _swapAlreadyRunning = false;
-                    _drawCounter = 0;
+                    _animationFrameCountDown = 0;
                 }
             }
 
@@ -333,7 +339,8 @@ namespace Peeky_Blinkers
             }
             await Task.WhenAll(taskList);
 
-            if (_drawCounter <= 0)
+
+            if (_animationFrameCountDown <= 0)
             {
                 RaiseWindowInfoChanged(GetCurrentWindowList());
             }
@@ -376,11 +383,17 @@ namespace Peeky_Blinkers
                     _destWindowList[_selectedWindowList[index].HWnd] = _selectedWindowList[index];
                 }
             }
-            _drawCounter = _drawMaxCounter;
             _swapAlreadyRunning = true;
-            _timer.Start();
-
-            return;
+            if (_animationEnabled)
+            {
+                _animationFrameCountDown = _animationFrameMaxCount;
+                _timer.Start();
+            }
+            else 
+            { 
+                _animationFrameCountDown = 0;
+                DrawWindow(this, null);
+            }
         }
 
         private async void DrawWindow(object sender, ElapsedEventArgs e)
@@ -390,7 +403,7 @@ namespace Peeky_Blinkers
 
             lock (_lockObj)
             {
-                _drawCounter--;
+                _animationFrameCountDown--;
 
                 List<WindowInfo> windowList = new List<WindowInfo>(_currentWindowList);
                 foreach(var win in windowList)
@@ -398,13 +411,13 @@ namespace Peeky_Blinkers
                     actionList.Add(() => 
                     { 
                         WindowInfo finalWindow = _destWindowList[win.HWnd];
-                        if (_drawCounter <= 0)
+                        if (_animationFrameCountDown <= 0)
                         {
                             MoveFinalWindowSetCursor(finalWindow);
                         }
                         else
                         {
-                            win.MoveStep(finalWindow, _drawMaxCounter);
+                            win.MoveStep(finalWindow, _animationFrameMaxCount);
                             _winApi.MoveWindowInvoke(win.HWnd
                                 , win.Left
                                 , win.Top
@@ -426,7 +439,7 @@ namespace Peeky_Blinkers
 
             await Task.WhenAll(taskList);
 
-            if (_drawCounter > 0)
+            if (_animationFrameCountDown > 0)
             {
                 _timer.Start();
             }
