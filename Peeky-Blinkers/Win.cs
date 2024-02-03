@@ -77,6 +77,8 @@ namespace Peeky_Blinkers
         [DllImport("user32.dll")]
         static extern uint GetDpiForWindow(IntPtr hWnd);
 
+        private readonly List<Rectangle> _rectangles = new List<Rectangle>();
+
         public bool EnumDesktopWindowsInvoke(IntPtr hDesktop, Interface.EnumWindowsProc eumWinProc, IntPtr lParam)
         {
             return EnumDesktopWindows(hDesktop, eumWinProc, lParam);
@@ -164,13 +166,13 @@ namespace Peeky_Blinkers
 
         public List<Rectangle> GetAllScreensRectangles()
         {
+            _rectangles.Clear();
             var screens = Screen.AllScreens;
-            List<Rectangle> rectangles = new List<Rectangle>();
             foreach(var screen in screens)
             {
-                rectangles.Add(screen.Bounds);
+                _rectangles.Add(screen.Bounds);
             }
-            return rectangles;
+            return _rectangles;
         }
 
         public Win()

@@ -21,6 +21,8 @@ namespace Peeky_Blinkers
     {
         private const string _unselectedColour = "#18FF0000";
         private const string _selectedColour = "#1800FF00";
+        private readonly SolidColorBrush _selectedBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_selectedColour));
+        private readonly SolidColorBrush _unselectedBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_unselectedColour));
         private WindowInfo _winInfo;
         internal Overlay(WindowInfo info)
         {
@@ -30,6 +32,13 @@ namespace Peeky_Blinkers
         }
 
         public event EventHandler<OverlayEventArgs> OverlayUpdated;
+
+        public void CloseThis()
+        {
+            BtnSelect.Click -= BtnSelectClicked;
+            _winInfo = null;
+            this.Close();
+        }
 
         public void RaisedOverlayUpdated(OverlayEventArgs args)
         {
@@ -53,11 +62,11 @@ namespace Peeky_Blinkers
         {            
             if (_winInfo.IsSelected)
             {
-                BtnSelect.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_selectedColour));
+                BtnSelect.Background = _selectedBrush;
             }
             else
             {
-                BtnSelect.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(_unselectedColour));
+                BtnSelect.Background = _unselectedBrush;
             }
         }
 

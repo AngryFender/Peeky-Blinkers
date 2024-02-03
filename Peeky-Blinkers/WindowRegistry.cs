@@ -4,10 +4,12 @@ using System;
 
 namespace Peeky_Blinkers
 {
-    internal class WindowRegistry : IWindowRegistry, IDisposable
+    internal class WindowRegistry : IWindowRegistry
     {
         private RegistryKey _softwareKey;
         private RegistryKey _appKey;
+        private bool _disposed = false;
+
         public WindowRegistry() 
         {
             _softwareKey= Registry.CurrentUser.OpenSubKey("Software", true);
@@ -26,8 +28,21 @@ namespace Peeky_Blinkers
 
         public void Dispose()
         {
-            _appKey.Close();
-            _softwareKey.Close();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                }
+                _appKey.Close();
+                _softwareKey.Close();
+                _disposed = true;
+            }
         }
     }
 }

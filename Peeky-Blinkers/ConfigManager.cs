@@ -8,9 +8,10 @@ using System.Threading.Tasks;
 
 namespace Peeky_Blinkers
 {
-    internal class ConfigManager
+    public class ConfigManager: IDisposable 
     {
         private readonly IWindowRegistry _registry;
+        private bool _disposed = false;
 
         internal ConfigManager(IWindowRegistry registry) => _registry = registry;
 
@@ -68,6 +69,25 @@ namespace Peeky_Blinkers
         internal void setAnimationFrameCount(int frameCount) 
         {
             _registry.SetValue("animation_frame_count", frameCount);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _registry.Dispose();
+                }
+                // no unmanaged memory to free here
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace Peeky_Blinkers
         private bool _exitRequested = false;
         private bool _initialNotification = true;
         private readonly Mutex _mutex;
-        private List<Overlay> _overlaysList = new List<Overlay>();
+        private readonly List<Overlay> _overlaysList = new List<Overlay>();
 
         private ObservableCollection<WindowInfo> _windowInfos = new ObservableCollection<WindowInfo>();
 
@@ -88,12 +88,21 @@ namespace Peeky_Blinkers
             {
                 overlay.Hide();
                 overlay.OverlayUpdated -= OverlayUpdatedHandler;
+                overlay.CloseThis();
             }
             _overlaysList.Clear();
         }
 
         private void ShowWindowsOverlayHandle(object sender, EventArgs e)
         {
+            foreach(Overlay overlay in _overlaysList)
+            {
+                overlay.Hide();
+                overlay.OverlayUpdated -= OverlayUpdatedHandler;
+                overlay.CloseThis();
+            }
+
+            _overlaysList.Clear();
             List<WindowInfo> winList = _winMan.GetCurrentWindowList();
             _windowInfos.Clear();
             foreach(WindowInfo win in winList)
@@ -147,6 +156,8 @@ namespace Peeky_Blinkers
         private void CloseApplication()
         {
             _exitRequested = true;
+            _winMan.Dispose();
+            _configManager.Dispose();
             Application.Current.Shutdown();
         }
 

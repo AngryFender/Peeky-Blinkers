@@ -12,6 +12,7 @@ namespace Peeky_Blinkers
     public class WindowManager: IDisposable
     {
         private readonly IWindowApi _winApi;
+        private bool _disposed = false;
 
         internal List<WindowInfo> _windowList = new List<WindowInfo>();
         private List<WindowInfo> _rawWindowList = new List<WindowInfo>();
@@ -307,9 +308,40 @@ namespace Peeky_Blinkers
 
         public void Dispose()
         {
-            _winApi.UnhookWinEventInvoke(_winEventHook);
-            _winApi.UnhookWinEventInvoke(_winEventHook2);
-            _winApi.UnhookWindowsHookExInvoke(_keyboardEventHook);
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    //clear an managed resources here
+                    _timer.Stop();
+                    _timer.Elapsed -= DrawWindow;
+                    _timer.Dispose();
+                }
+
+                //clearing unmanaged resources
+                if (IntPtr.Zero != _winEventHook)
+                {
+                    _winApi.UnhookWinEventInvoke(_winEventHook);
+                    _winEventHook = IntPtr.Zero;
+                }
+                if (IntPtr.Zero != _winEventHook2)
+                {
+                    _winApi.UnhookWinEventInvoke(_winEventHook2);
+                    _winEventHook = IntPtr.Zero;
+                }
+                if (IntPtr.Zero != _keyboardEventHook)
+                {
+                    _winApi.UnhookWinEventInvoke(_keyboardEventHook);
+                    _winEventHook = IntPtr.Zero;
+                }
+                _disposed = true;
+            }
         }
 
         public async Task Swap()
@@ -338,7 +370,6 @@ namespace Peeky_Blinkers
                 task.Start();
             }
             await Task.WhenAll(taskList);
-
 
             if (_animationFrameCountDown <= 0)
             {
@@ -405,8 +436,7 @@ namespace Peeky_Blinkers
             {
                 _animationFrameCountDown--;
 
-                List<WindowInfo> windowList = new List<WindowInfo>(_currentWindowList);
-                foreach(var win in windowList)
+                foreach(var win in _currentWindowList)
                 {
                     actionList.Add(() => 
                     { 
@@ -471,6 +501,11 @@ namespace Peeky_Blinkers
                 // Simulate Alt key release
                 _winApi.keybd_eventInvoke(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, UIntPtr.Zero);
             }
+        }
+
+        ~WindowManager()
+        {
+            Dispose(disposing: false);
         }
     }
 

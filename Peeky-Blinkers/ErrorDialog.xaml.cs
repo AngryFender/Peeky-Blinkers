@@ -27,6 +27,7 @@ namespace Peeky_Blinkers
 
         private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
+            BtnClose.Click -= BtnClose_Click;
             Close();
         }
 
