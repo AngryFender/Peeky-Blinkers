@@ -22,7 +22,7 @@ namespace Peeky_Blinkers
         private bool _exitRequested = false;
         private bool _initialNotification = true;
         private readonly Mutex _mutex;
-        private readonly List<Overlay> _overlaysList = new List<Overlay>();
+        private readonly List<WeakReference<Overlay>> _overlaysList = new List<WeakReference<Overlay>>();
 
         private ObservableCollection<WindowInfo> _windowInfos = new ObservableCollection<WindowInfo>();
 
@@ -84,25 +84,36 @@ namespace Peeky_Blinkers
 
         private void HideWindowsOverlayHandle(object sender, EventArgs e)
         {
-            foreach(Overlay overlay in _overlaysList)
+            foreach(WeakReference<Overlay> weakRef in _overlaysList)
             {
-                overlay.Hide();
-                overlay.OverlayUpdated -= OverlayUpdatedHandler;
-                overlay.CloseThis();
+                List<WeakReference<Overlay>> list = new List<WeakReference<Overlay>>();
+                Overlay overlay;
+                if (weakRef.TryGetTarget(out overlay))
+                {
+                    overlay.Hide();
+                    overlay.OverlayUpdated -= OverlayUpdatedHandler;
+                    overlay.CloseThis();
+                }
             }
             _overlaysList.Clear();
+            GC.Collect();
         }
 
         private void ShowWindowsOverlayHandle(object sender, EventArgs e)
         {
-            foreach(Overlay overlay in _overlaysList)
+            foreach(WeakReference<Overlay> weakRef in _overlaysList)
             {
-                overlay.Hide();
-                overlay.OverlayUpdated -= OverlayUpdatedHandler;
-                overlay.CloseThis();
+                List<WeakReference<Overlay>> list = new List<WeakReference<Overlay>>();
+                Overlay overlay;
+                if (weakRef.TryGetTarget(out overlay))
+                {
+                    overlay.Hide();
+                    overlay.OverlayUpdated -= OverlayUpdatedHandler;
+                    overlay.CloseThis();
+                }
             }
-
             _overlaysList.Clear();
+
             List<WindowInfo> winList = _winMan.GetCurrentWindowList();
             _windowInfos.Clear();
             foreach(WindowInfo win in winList)
@@ -124,7 +135,9 @@ namespace Peeky_Blinkers
                 };
                 overlay.ShowUpdate();
                 overlay.OverlayUpdated += OverlayUpdatedHandler;
-                _overlaysList.Add(overlay);
+
+                WeakReference<Overlay> weakRef = new WeakReference<Overlay>(overlay);
+                _overlaysList.Add(weakRef);
             }
         }
 
