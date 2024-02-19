@@ -141,11 +141,16 @@ namespace Peeky_Blinkers
                         {
                             HideAllWindowOverlay();
                             Swap();
-                            isDoubleShiftPressedDown = true; 
+                            isLeftShiftPressedDown = false;
+                            isRightShiftPressedDown = false;
                         }
                         else if (isLeftShiftPressedDown && isRightShiftPressedDown && isLAltPressedDown)
                         {
                             RaiseShowWindowsOverlay();
+                            isLAltPressedDown = false;
+                            isRightShiftPressedDown= false;
+                            isLAltPressedDown = false;
+                            isDoubleShiftPressedDown = false;
                         }
                     }
 
@@ -161,7 +166,7 @@ namespace Peeky_Blinkers
                 }
                 else
                 {
-                    if (isKeyDown && !isLAltPressedDown && !isLAltPressedDown)
+                    if (isKeyDown)
                     {
                         HideAllWindowOverlay();
                     }
