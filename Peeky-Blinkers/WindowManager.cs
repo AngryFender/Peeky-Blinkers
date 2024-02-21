@@ -141,8 +141,6 @@ namespace Peeky_Blinkers
                         {
                             HideAllWindowOverlay();
                             Swap();
-                            isLeftShiftPressedDown = false;
-                            isRightShiftPressedDown = false;
                         }
                         else if (isLeftShiftPressedDown && isRightShiftPressedDown && isLAltPressedDown)
                         {
