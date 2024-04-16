@@ -38,6 +38,7 @@ namespace Peeky_Blinkers
         private bool isLAltPressedDown = false;
         private bool isDoubleShiftPressedDown = false;
         private bool isOverlayShown = false;
+        private bool isMinimizedAllowed = false;
         private const int WM_SYSKEYDOWN = 0x0104;
         private const int WM_KEYUP = 0x0101;
         private const int WM_SYSKEYUP = 0x0105;
@@ -504,6 +505,11 @@ namespace Peeky_Blinkers
                 // Simulate Alt key release
                 _winApi.keybd_eventInvoke(VK_ALT, 0, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, UIntPtr.Zero);
             }
+        }
+
+        public void setMinimizedState(bool isMinimizedAppsAllowed)
+        {
+            this.isMinimizedAllowed = isMinimizedAppsAllowed;
         }
 
         ~WindowManager()

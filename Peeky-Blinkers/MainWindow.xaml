@@ -69,10 +69,10 @@
             </ListView.View>
         </ListView>
 
-        <StackPanel Grid.Row="1" Orientation="Vertical" Margin="20">
-            <CheckBox x:Name="CheckBox_animation" Content="Animation Enabled" />
-            
-            <Grid>
+        <StackPanel   Grid.Row="1" Orientation="Vertical" Margin="20" >
+            <CheckBox x:Name="CheckBox_minimized" Content="Minimized Apps Included" Margin="5" />
+            <CheckBox x:Name="CheckBox_animation" Content="Animation Enabled" Margin="5"/>
+            <Grid Margin="5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>

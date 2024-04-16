@@ -67,7 +67,16 @@ namespace Peeky_Blinkers
                 CheckBox_animation.Checked += CheckBox_animation_handler;
                 CheckBox_animation.Unchecked += CheckBox_animation_handler;
                 Slider_animation.ValueChanged += Slider_animation_ValueChanged;
+
+
+                CheckBox_minimized.Checked += CheckBox_minimized_handler;
+                CheckBox_minimized.Unchecked += CheckBox_minimized_handler;
             }
+        }
+
+        private void CheckBox_minimized_handler(object sender, RoutedEventArgs e)
+        {
+            _winMan.setMinimizedState(CheckBox_minimized.IsChecked.GetValueOrDefault());
         }
 
         private void Slider_animation_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
