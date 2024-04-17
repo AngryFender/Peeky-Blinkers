@@ -77,6 +77,9 @@ namespace Peeky_Blinkers
         [DllImport("user32.dll")]
         static extern uint GetDpiForWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        static extern bool IsIconic(IntPtr hWnd);
+
         private readonly List<Rectangle> _rectangles = new List<Rectangle>();
 
         public bool EnumDesktopWindowsInvoke(IntPtr hDesktop, Interface.EnumWindowsProc eumWinProc, IntPtr lParam)
@@ -173,6 +176,11 @@ namespace Peeky_Blinkers
                 _rectangles.Add(screen.Bounds);
             }
             return _rectangles;
+        }
+
+        public bool IsIconicInvoke(IntPtr hWnd)
+        {
+            return IsIconic(hWnd);
         }
 
         public Win()

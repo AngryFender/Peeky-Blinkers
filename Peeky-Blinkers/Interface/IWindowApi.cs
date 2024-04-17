@@ -57,5 +57,6 @@ namespace Peeky_Blinkers.Interface
         void keybd_eventInvoke(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
         uint GetDpiForWindowInvoke(IntPtr hWnd);
         List<Rectangle> GetAllScreensRectangles();
+        bool IsIconicInvoke(IntPtr hWnd);
     }
 }
