@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Peeky_Blinkers
 {
@@ -225,7 +226,7 @@ namespace Peeky_Blinkers
         {
             if (_winApi.GetWindowRectInvoke(hWnd, out WinRect rect) && _winApi.IsWindowVisibleInvoke(hWnd))
             {
-                WindowInfo info = new WindowInfo(hWnd, rect.left, rect.top, rect.right, rect.bottom, null, false);
+                WindowInfo info = new WindowInfo(hWnd, rect.left, rect.top, rect.right, rect.bottom, null, false, false);
                 _rawWindowList.Add(info);
             }
             return true;
@@ -257,6 +258,7 @@ namespace Peeky_Blinkers
                         continue;
                     }
 
+                    window.IsMinimized = _winApi.IsIconicInvoke(window.HWnd);
                     newList.Add(window);
 
                     if(OldWindowDict.TryGetValue(window.HWnd, out WindowInfo oldWin)){

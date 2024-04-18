@@ -13,9 +13,10 @@ namespace Peeky_Blinkers
             Bottom = old.Bottom;
             Title = old.Title;
             IsSelected = old.IsSelected;
+            IsMinimized = old.IsMinimized;
         }
 
-        public WindowInfo(IntPtr hWnd, int left, int top, int right, int bottom, string title, bool isSelected)
+        public WindowInfo(IntPtr hWnd, int left, int top, int right, int bottom, string title, bool isSelected, bool isMinimized)
         {
             HWnd = hWnd;
             Left = left;
@@ -24,6 +25,7 @@ namespace Peeky_Blinkers
             Bottom = bottom;
             Title = title;
             IsSelected = isSelected;
+            IsMinimized= isMinimized;
         }
 
         public IntPtr HWnd { get; set; }
@@ -33,6 +35,7 @@ namespace Peeky_Blinkers
         public int Bottom { get; set; }
         public string Title { get; set; }
         public bool IsSelected { get; set; }
+        public bool IsMinimized { get; set; }
 
         public static bool operator ==(WindowInfo a, WindowInfo b)
         {
@@ -43,6 +46,7 @@ namespace Peeky_Blinkers
             if(a.Bottom != b.Bottom) { return false; }
             if (a.Title != b.Title) {  return false; }
             if(a.IsSelected != b.IsSelected) { return false; }
+            if(a.IsMinimized!= b.IsMinimized) { return false; }
 
             return true;
         }
@@ -61,7 +65,8 @@ namespace Peeky_Blinkers
                    Right == info.Right &&
                    Bottom == info.Bottom &&
                    Title == info.Title &&
-                   IsSelected == info.IsSelected;
+                   IsSelected == info.IsSelected &&
+                   IsMinimized== info.IsMinimized;
         }
 
         public WindowInfo Copy(WindowInfo original)
@@ -72,7 +77,8 @@ namespace Peeky_Blinkers
                                             original.Right, 
                                             original.Bottom, 
                                             original.Title, 
-                                            original.IsSelected);
+                                            original.IsSelected,
+                                            original.IsMinimized);
             return copy;
         }
 
@@ -94,6 +100,7 @@ namespace Peeky_Blinkers
             hashCode = hashCode * -1521134295 + Bottom.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Title);
             hashCode = hashCode * -1521134295 + IsSelected.GetHashCode();
+            hashCode = hashCode * -1521134295 + IsMinimized.GetHashCode();
             return hashCode;
         }
     }
