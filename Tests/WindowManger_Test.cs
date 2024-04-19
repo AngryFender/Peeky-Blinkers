@@ -19,7 +19,7 @@ namespace Tests
             var mock = new Mock<IWindowApi>();
             WindowManager winMan = new WindowManager(mock.Object);
 
-            WindowInfo info = new WindowInfo((IntPtr)3, 0, 0, 400, 400, "Test-Title", false);
+            WindowInfo info = new WindowInfo((IntPtr)3, 0, 0, 400, 400, "Test-Title", false, false);
             var expectedList = new List<WindowInfo>();
             expectedList.Add(info);
 
@@ -88,7 +88,7 @@ namespace Tests
             var mock = new Mock<IWindowApi>();
             WindowManager winMan = new WindowManager(mock.Object);
 
-            WindowInfo info = new WindowInfo((IntPtr)3, 0, 0, 400, 400, "Test-Title", false);
+            WindowInfo info = new WindowInfo((IntPtr)3, 0, 0, 400, 400, "Test-Title", false, false);
             var expectedList = new List<WindowInfo>();
             expectedList.Add(info);
 
@@ -158,9 +158,9 @@ namespace Tests
             WindowManager winMan = new WindowManager(mock.Object);
 
             var expectedList = new List<WindowInfo>();
-            expectedList.Add(new WindowInfo((IntPtr)1, 0, 500, 400, 400, "Third", false));
-            expectedList.Add(new WindowInfo((IntPtr)2, 0, 100, 400, 400, "Second", false));
-            expectedList.Add(new WindowInfo((IntPtr)3, 0, 0, 400, 400, "First", false));
+            expectedList.Add(new WindowInfo((IntPtr)1, 0, 500, 400, 400, "Third", false, false));
+            expectedList.Add(new WindowInfo((IntPtr)2, 0, 100, 400, 400, "Second", false, false));
+            expectedList.Add(new WindowInfo((IntPtr)3, 0, 0, 400, 400, "First", false, false));
 
             List<IntPtr> mockHwdList = new List<IntPtr>();
             mockHwdList.Add((IntPtr)1);
@@ -280,21 +280,21 @@ namespace Tests
             WindowManager winMan = new WindowManager(mock.Object);
 
             var expectedList = new List<WindowInfo>();
-            expectedList.Add(new WindowInfo((IntPtr)2, 0,   0, 400, 400, "", true));
-            expectedList.Add(new WindowInfo((IntPtr)1, 400, 0, 800, 400, "",true));
-            expectedList.Add(new WindowInfo((IntPtr)3, 800, 0, 1200, 400, "", true));
+            expectedList.Add(new WindowInfo((IntPtr)2, 0,   0, 400, 400, "", true, false));
+            expectedList.Add(new WindowInfo((IntPtr)1, 400, 0, 800, 400, "",true, false));
+            expectedList.Add(new WindowInfo((IntPtr)3, 800, 0, 1200, 400, "", true, false));
 
             var mockList = new List<WindowInfo>();
-            mockList.Add(new WindowInfo((IntPtr)3, 0, 0, 400, 400, "", true));
-            mockList.Add(new WindowInfo((IntPtr)2, 400, 0, 800, 400, "",true));
-            mockList.Add(new WindowInfo((IntPtr)1, 800, 0, 1200, 400, "", true));
+            mockList.Add(new WindowInfo((IntPtr)3, 0, 0, 400, 400, "", true, false));
+            mockList.Add(new WindowInfo((IntPtr)2, 400, 0, 800, 400, "",true, false));
+            mockList.Add(new WindowInfo((IntPtr)1, 800, 0, 1200, 400, "", true, false));
 
             List<WindowInfo> result = new List<WindowInfo>();
 
             mock.Setup(x => x.MoveWindowInvoke(It.IsAny<IntPtr>(),It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<bool>()))
                 .Returns((IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint) => 
                 {
-                    result.Add(new WindowInfo(hWnd, X, Y, X + nWidth, Y + nHeight,"", true));
+                    result.Add(new WindowInfo(hWnd, X, Y, X + nWidth, Y + nHeight,"", true, false));
                     return true;
                 });
 
